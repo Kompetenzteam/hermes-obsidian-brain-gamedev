@@ -9,12 +9,12 @@ status: active
 > Reihenfolge = Priorität, dann Eingangsreihenfolge.
 
 ## Phase 0 — Konzeption
-- [ ] P0 ~~Art-Konzept definieren~~ ✅ entschieden (Richtung C)
-- [ ] P0 ~~Logo entwickeln~~ ⏸️ zurückgestellt (DEV-001), wird später wieder aufgenommen
-- [ ] P0 ADR-006 Tech-Stack entscheiden (nächster Freigabepunkt)
-- [ ] P0 GDD (Game Design Document) schreiben
-- [ ] P0 NDD (Networking Design Document) schreiben — Lockstep-Architektur
-- [ ] P1 Projekt-Boilerplate (Repo-Struktur, CI, Linter, i18n-Gerüst)
+- [x] P0 ~~Art-Konzept definieren~~ ✅ entschieden (Richtung C)
+- [x] P0 ~~Logo entwickeln~~ ✅ FREIGEGEBEN (2026-08-09, `logo_simple_fixed.svg`)
+- [x] P0 ~~ADR-006 Tech-Stack entscheiden~~ ✅ FREIGEGEBEN (accepted)
+- [x] P0 ~~GDD (Game Design Document)~~ ✅ freigegeben (v0.2)
+- [x] P0 ~~NDD (Networking Design Document)~~ ✅ freigegeben (v0.2)
+- [x] P1 Projekt-Boilerplate ✅ (M1: Godot-Scaffold, CI, i18n) — M2 Lockstep-Kern ✅ (42 Tests)
 
 ## Phase 1 — MVP (Release-Blocker)
 - [ ] P0 Multiplayer-Kern: Deterministic Lockstep (Eingaben, Snapshots, Reconnect)

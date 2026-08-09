@@ -58,6 +58,13 @@ Glieder übernimmt die Rolle des Koordinators über parallele Agents und definie
 - Kontinuierlich lernen, wie die Zusammenarbeit mit Glieder optimal läuft: Muster aus Sessions ableiten, Skills entsprechend patchen/erweitern
 - Referenz-Skill: `project-lead-workflow` (kodifiziert dieses Regelwerk als ablauffähigen Workflow)
 
+### ⚡ Token-Optimierung (2026-08-09, umgesetzt + verifiziert)
+1. **Cache-Schutz (harte Regel):** Kein `/model`-Wechsel mid-session, kein Provider-Fallback/Wechsel in langer Session — killt den DeepSeek-Prefix-Cache (~90% Input-Rabatt). Modellwechsel nur in NEUER Session. Session bei Themenwechsel beenden statt Modell-Hopping.
+2. **Skills-Index klein halten:** 55 ungenutzte Skills gelöscht (42 bleiben), Backup `D:\Entwicklung\backups\skills-pruned-20260809.zip`; `hermes skills opt-out` gesetzt (kein Re-Seeding). Gemessen: Systemprompt 31,4 KB → 24,1 KB (−23%), Skills-Index 9,2 KB → 4,1 KB (−55%).
+3. **Memory kompakt:** 19 → 15 Einträge (6,8 KB → 4,5 KB). Keine Duplikate, keine veralteten Projekt-Einträge.
+4. **Compression-Config:** `compression.threshold 0.6`, `min_tail_user_messages 2` (verifiziert via `hermes config get`). deepseek-v4-flash = 1M Kontext.
+5. **Kontext-Disziplin:** Delegation für Recherche/Code (nur Summaries zurück); `execute_code` für Batch statt vieler Tool-Calls; Tool-Outputs deckeln (read_file limit, curl in Datei); Brain-Writes bündeln.
+
 ### 🎨 Design-Standards
 ⚠️ **OFFEN** — Vom User noch nicht geliefert (Übergabe wurde abgebrochen). Bei Lieferung als ADR-Update ergänzen.
 

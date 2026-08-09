@@ -15,6 +15,7 @@ created: 2026-07-17
 ## 📝 Sessions
 - [[50-Sessions/2026-07-17_Hermes-Brain-Setup|2026-07-17 — Hermes Brain Setup]]
 - [[50-Sessions/2026-08-09_Arbeitsregeln-Uebernahme|2026-08-09 — Arbeitsregeln Übernahme]]
+- [[50-Sessions/2026-08-09_Token-Optimierung|2026-08-09 — Token-Optimierung]]
 - [[50-Sessions/2026-08-09_OpenMotion-Kickoff|2026-08-09 — OpenMotion Kickoff]]
 
 ## 🎯 Entscheidungen (ADR)

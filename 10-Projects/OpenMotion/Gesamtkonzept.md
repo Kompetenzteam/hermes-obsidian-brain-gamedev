@@ -183,7 +183,7 @@ M8 Release      ▸ EA, Linux-Build, Store, Workshop-Vorbereitung
 - [x] **Gesamtkonzept freigegeben** (2026-08-09) — inkl. Bausystem Stufe 1 + SIM-Bewohner/Wuselfaktor
 - [x] **Projektplan freigegeben** (2026-08-09)
 - [x] **D1 Art-Richtung:** **C — Semi-realistisch, eigene Farbwelt** (2026-08-09)
-- [ ] **D2 Logo:** ⏸️ **ZURÜCKGESTELLT (2026-08-09)** — 3 Entwurfsrunden (Pillow-Primitive, reale Silhouetten, Motion-Varianten) vorgelegt, noch keine Freigabe. Wird später wieder aufgenommen.
+- [x] **D2 Logo:** ✅ **FREIGEGEBEN (2026-08-09)** — `logo_simple_fixed.svg` (16 Pfade, farbkorrekt: Rot 5,5 %, Steam-tauglich) + Skalierungen in `assets/logo/preview/`
 
 Nach Logo-Freigabe: ADR-006 (Tech-Stack) + GDD (detailliert) + NDD (detailliert) — jeweils erneut zur Freigabe.
 
