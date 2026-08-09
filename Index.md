@@ -26,6 +26,7 @@ updated: 2026-08-09
 - [[50-Sessions/2026-08-09_Projekt-Index-Cronjob|2026-08-09 — Projekt-Index-Cronjob]]
 - [[50-Sessions/2026-08-09_Rechtsform-Gruendung|2026-08-09 — Rechtsform & Gründung]]
 - [[50-Sessions/2026-08-09_Steamworks-Partnerkonto|2026-08-09 — Steamworks-Partnerkonto]]
+- [[50-Sessions/2026-08-09_Brain-Doku-LessonsLearned|2026-08-09 — Brain-Doku-Pflicht & LessonsLearned]]
 
 ## 🎯 Entscheidungen (ADR)
 - [[60-Decisions/ADR-001_Tech-Stack|ADR-001 — Tech Stack]]
@@ -40,6 +41,7 @@ updated: 2026-08-09
 - [[70-Deviations/DEV-001_Logo-zurueckgestellt|DEV-001 — Logo-Entwurf zurückgestellt]]
 
 ## 📚 Ressourcen
+- [[30-Resources/LessonsLearned|Lessons Learned — Fehler & Lösungen]] — alle dokumentierten Fehler mit Ursache, Lösung, Prävention
 - [[30-Resources/Steamworks-Setup-Anleitung|Steamworks-Setup-Anleitung]] — Schritt-für-Schritt für Glieder (Partnerkonto, SDK, App-ID, Spacewar-480)
 - [[30-Resources/|Ressourcen-Übersicht]]
 

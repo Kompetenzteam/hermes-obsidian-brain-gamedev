@@ -30,6 +30,7 @@ Glieder übernimmt die Rolle des Koordinators über parallele Agents und definie
 - Nach jeder Änderung sofort neu indizieren + verlinken
 - Entscheidungen dokumentieren (ADRs), keine leeren Dateien
 - Permanenter Doc-Agent dokumentiert alles mit
+- **Brain-Doku-Pflicht (2026-08-09):** Jede Änderung, Entscheidung und Projektplanerweiterung wird SOFORT im Brain dokumentiert — mit Historie, Datum und Entscheidungsgrund (vollständig nachvollziehbar). Alle Fehler und Lösungen werden in `30-Resources/LessonsLearned.md` dokumentiert (Format: Symptom → Ursache → Lösung → Validierung → Prävention), damit Fehler nie wiederholt werden.
 
 ### 💻 Code-Standards
 - **i18n = hartes Gate:** DE/EN-Parität Pflicht, keine hardcodierten Texte (bei gemischten Feedback-Listen zuerst ALLE Sprachfehler beheben)
