@@ -197,7 +197,9 @@ Nach Logo-Freigabe: ADR-006 (Tech-Stack) + GDD (detailliert) + NDD (detailliert)
 
 ## Verlinkungen
 - [[README|Projekt-README]]
+- [[Gesamtkonzept|Gesamtkonzept]]
 - [[Projektplan|Projektplan]]
 - [[Art-Konzept|Art-Konzept]]
 - [[Backlog|Backlog]]
+- [[30-Resources/Steamworks-Setup-Anleitung|Steamworks-Setup-Anleitung (für Glieder)]]
 - [[60-Decisions/ADR-005_OpenMotion|ADR-005 — Projektgründung]]

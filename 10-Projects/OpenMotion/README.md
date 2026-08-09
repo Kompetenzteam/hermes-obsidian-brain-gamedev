@@ -54,6 +54,7 @@ repo: D:\Entwicklung\Projekte\OpenMotion
 - [[50-Sessions/2026-08-09_OpenMotion-Kickoff|2026-08-09 — Kickoff]]
 - [[50-Sessions/2026-08-09_OpenMotion-M1-M3|2026-08-09 — M1–M3 (Boilerplate, Lockstep, Simulation, D2-Logo)]]
 - [[50-Sessions/2026-08-09_OpenMotion-M4-M5|2026-08-09 — M4–M5 (Vehicles, Steam Multiplayer)]]
+- [[50-Sessions/2026-08-09_OpenMotion-M6|2026-08-09 — M6 (City/UI, Referenzkarte, i18n)]]
 
 ## Entscheidungen
 - [[60-Decisions/ADR-005_OpenMotion|ADR-005 — Projektgründung]]
