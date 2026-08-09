@@ -501,7 +501,7 @@ Eine Save-Datei = **eine SQLite-Datei** (ADR-006: SQLite für lokale Persistenz)
 
 ## 13. Offene Design-Fragen (Freigabe-Runde Q1–Q5)
 
-Alle Fragen dieser Runde sind **ENTSCHEIDEN** (2026-08-09, Entscheider: Glieder) und in den jeweiligen Abschnitten eingearbeitet:
+Alle Fragen dieser Runde sind **ENTSCHIEDEN** (2026-08-09, Entscheider: Glieder) und in den jeweiligen Abschnitten eingearbeitet:
 
 1. **Agent-LOD-Konfiguration — ENTSCHIEDEN (2026-08-09, Entscheider: Glieder):** 3 Stufen (voll 30 Hz in Spielernähe ~200 m / reduziert 10 Hz ~600 m / abstrakt 2 Hz Ferne), Grenzen tick-basiert → §7.2.
 2. **Reconnect- & Pause-Politik — ENTSCHIEDEN (2026-08-09, Entscheider: Glieder):** Reconnect-Fenster 60 s, Pause während des Fensters, danach Fortsetzen ohne KI-Übernahme → §8.3/§8.4/§10.3. **Erweiterung beschlossen:** Save & Resume (Session-Persistenz) → §12.
