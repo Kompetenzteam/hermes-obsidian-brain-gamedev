@@ -10,7 +10,6 @@ updated: 2026-08-09
 > Nutzer: Glieder
 
 ## 📋 Projekte
-- [[10-Projects/Glorious-Framework/README|Glorious-Framework]] — Go + Tauri + Chi + GORM + SQLite + CoreUI
 - [[10-Projects/Glorious-Platform/README|Glorious-Platform]] — Eigenständige Neuentwicklung (Go, Security-Analyse)
 - [[10-Projects/OpenMotion/README|OpenMotion]] — Nahverkehrs-Simulator (CIM2-Geist, desync-freier Multiplayer, Steam)
   - [[10-Projects/OpenMotion/Index/index|OpenMotion-Index]] — Code-Index (stündlich aktualisiert, ADR-007)
