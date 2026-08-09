@@ -1,14 +1,16 @@
 ---
 tags: [project, gdd, design]
 project: OpenMotion
-status: draft
+status: accepted
+version: 0.2
 date: 2026-08-09
+freigabe: Freigabe Glieder 2026-08-09
 ---
 
 # OpenMotion — Game Design Document (GDD)
 
-> Status: **DRAFT — Freigabe durch Glieder ausstehend** (Freigabe-Regel ADR-004: keine Umsetzung vor Freigabe)
-> Version: 0.1 | Datum: 2026-08-09
+> Status: **FREIGEGEBEN** — Freigabe Glieder 2026-08-09 (Freigabe-Regel ADR-004 erfüllt, Umsetzung freigegeben)
+> Version: 0.2 | Datum: 2026-08-09
 > Autor: Hermes (Lead Gamedesigner, Senior Lead Game Developer, Senior Networking Specialist)
 > Basis: [[Gesamtkonzept]] (freigegeben), [[Projektplan]] (freigegeben), [[Backlog]] (aktiv), [[60-Decisions/ADR-005_OpenMotion|ADR-005]] (freigegeben), [[60-Decisions/ADR-006_OpenMotion-Tech-Stack|ADR-006]] (freigegeben), [[Art-Konzept]] (entschieden: Richtung C)
 > Qualitäts-Gates (ADR-004): TDD + 2x-Validierung, **keine Platzhalter/Stubs**, i18n DE/EN als hartes Gate.
@@ -58,7 +60,7 @@ date: 2026-08-09
 - Linienfarben = leuchtende Spielerfarben (Multiplayer-Lesbarkeit); im Solo wählt der Spieler Linienfarben frei aus der Palette.
 - Netzwerk: Steam P2P via Steam Datagram Relay (NAT-Relay-Fallback), kein Dedicated Server im MVP (0 € Serverkosten).
 
-**Offene Design-Frage (ODF-3):** Kompetitiver Modus — konkrete Konkurrenz-Regeln (Linien-Exklusivität, Mehrfachbedienung derselben Haltestelle durch mehrere Spieler, Fahrgast-Verteilung bei parallelen Angeboten) — siehe Kapitel 15.
+**Entschieden (ODF-3, Freigabe Glieder 2026-08-09):** **Mehrfachbedienung erlaubt** — mehrere Spieler dürfen dieselbe Haltestelle bedienen, keine Linien-Exklusivität. Fahrgäste verteilen sich nach einem **deterministischen Wahlmodell: gewichtete Reisezeit (dominant) + Ticketpreis (sekundär)** — bei ähnlicher Reisezeit kann die billigere Linie bevorzugt werden; die Preis-Differenz fließt als Gewichtungsfaktor in die Wahl ein (Details Kapitel 5.3; Entscheidung ODF-3 in Kapitel 15).
 
 ---
 
@@ -75,7 +77,7 @@ date: 2026-08-09
 | **Depots** | Abstell- und Wartungsstandorte für Fahrzeuge | Müssen an das Straßen-/Schienennetz angebunden sein, damit Fahrzeuge ein- und ausrücken können |
 | **Tunnel/Brücken** | Topografische Verbindungen (z. B. U-Bahn-Tunnel, Straßen-/Schienenbrücken über Hindernisse) | Verbinden zwei Netzabschnitte; ermöglichen Wege unabhängig vom Gelände |
 
-**Signale und Infrastruktur-Details** (z. B. Weichensteuerung, Signalanlagen): Phase 2+ — **Offene Design-Frage** zur Detailtiefe (siehe ODF-Liste, wird nach MVP entschieden).
+**Signale und Infrastruktur-Details** (z. B. Weichensteuerung, Signalanlagen): Phase 2+ — **Offene Design-Frage** zur Detailtiefe (siehe Kapitel 15, wird nach MVP entschieden).
 
 ### 3.2 Platzierungsregeln
 - Alle Elemente werden als Netzwerk-Elemente platziert; jedes neue Element muss **mindestens einen Anschluss** an das bestehende Netz (oder einen gültigen Startpunkt) haben — keine isolierten Fragmente.
@@ -136,6 +138,7 @@ Konkrete Parameter/Schwellwerte werden in der Balance-Phase (M3) kalibriert — 
 ### 5.3 Reise-Entscheidung (Route & Umsteigen)
 - Zielwahl: Nächstgelegenes passendes Ziel oder präferiertes Ziel (regelbasiert, deterministisch).
 - Routenwahl qualitativ: Gewichtung von **Reisezeit, Anzahl Umstiege, Wartezeit, Zuverlässigkeit (Verspätungshistorie) und Ticketpreis**.
+- **Wahlgewichtung (entschieden, ODF-3, Freigabe Glieder 2026-08-09):** **Reisezeit dominant, Ticketpreis sekundär** — die Preis-Differenz zwischen parallelen Angeboten ist ein Gewichtungsfaktor im deterministischen Wahlmodell; bei ähnlicher Reisezeit gewinnt die billigere Linie (keine reine Preis-Minimierung). Gewichte sind feste Konstanten (Lockstep-deterministisch), keine zeit-/plattformabhängigen Werte.
 - Umsteigen: An Haltestellen mit mehreren Linien entscheidet der Agent regelbasiert über die nächste Linie; Wartezeiten entstehen real an der Haltestelle (Wuselfaktor).
 - Alle Entscheidungen nutzen ausschließlich den deterministischen Seed — keine zeit- oder plattformabhängigen Werte (Lockstep-Disziplin).
 
@@ -150,11 +153,10 @@ Konkrete Parameter/Schwellwerte werden in der Balance-Phase (M3) kalibriert — 
 - Stilisierte Figuren (Art-Konzept Richtung C), Linien-/Ziel-unabhängig eingefärbt.
 
 ### 5.6 Skalierung & Lockstep
-- **Agent-LOD:** Volle Simulation in Spielernähe, entfernte Bereiche abstrahiert — gleiche Ergebnisse durch deterministischen Scheduler, nur weniger Detail-Ticks.
-- Sim-Tick der Agenten ~10–20 Hz, Rendering interpoliert dazwischen (Standard in Sim-Spielen).
+- **Kern-Tick (entschieden, ODF-1, Freigabe Glieder 2026-08-09):** Feste Konstante **30 Ticks/s** für den Lockstep-Simulationskern, **tick-basiert** (kein variabler Frame-Tick). Rendering interpoliert zwischen den Ticks (Standard in Sim-Spielen).
+- **Agent-LOD (entschieden, ODF-1):** 3 Stufen — **30 Hz volle Simulation in Spielernähe** (Umkreis der Spielerkamera), **10 Hz reduzierte Simulation** (mittlere Distanz), **2 Hz abstrakte Simulation** (ferne Bereiche). Gleiche Ergebnisse durch deterministischen Scheduler: fester Tick-Raster, nur weniger Detail-Ticks je LOD-Stufe.
 - Agenten-Log ist Teil des Replay-Logs (größer, aber deterministisch); Tick-Hash prüft alle Agenten mit.
 - Performance-Budget: `struct`-Typen, keine Allokationen im Tick (ADR-006).
-- **ODF-1:** Finale feste Tick-Rate des Lockstep-Kerns (ADR-006 nennt z. B. 30 Ticks/s; Agenten-Detail 10–20 Hz) — siehe Kapitel 15.
 
 ---
 
@@ -163,8 +165,8 @@ Konkrete Parameter/Schwellwerte werden in der Balance-Phase (M3) kalibriert — 
 ### 6.1 Einnahmen
 | Quelle | Beschreibung |
 |--------|--------------|
-| **Ticketpreise** | Vom Spieler je Linie oder global festlegbar; Erlös pro befördertem Fahrgast |
-| **Subventionen** | Regelmäßige Zuschüsse (z. B. pro Linie oder pauschal), stabilisieren schwache Netze |
+| **Ticketpreise** | **MVP (entschieden, ODF-2, Freigabe Glieder 2026-08-09): einheitlicher Flächen-/Globaltarif** — ein globaler, vom Spieler festlegbarer Preis; Erlös pro befördertem Fahrgast. Differenzierte Preise je Zone nur als optionale, per Spiel-Einstellung aktivierbare Methode (**Phase 2**, vollständige Planung siehe 6.6) |
+| **Subventionen** | **Bedarfsbasiert je Linie (entschieden, ODF-5, Freigabe Glieder 2026-08-09):** gekoppelt an Betrieb (mind. 1 aktives Fahrzeug + regelmäßige Bedienung), gedeckelt — stabilisieren schwache Netze ohne passives Einkommen (Balancing siehe Kapitel 11) |
 | **Zusätzliche Einnahmen** | Nicht im MVP (z. B. Werbung) — **offen für Phase 2+** |
 
 ### 6.2 Ausgaben
@@ -184,7 +186,47 @@ Konkrete Parameter/Schwellwerte werden in der Balance-Phase (M3) kalibriert — 
 - **Subventionen als Stabilisator:** verhindern Frust-Kollaps in der Aufbauphase, koppeln aber an Netznutzung (Anreiz zu bedarfsgerechtem Ausbau).
 - **Kredite als Skalierungs-Hebel** mit Zinsdruck; Ziel: profitable Linien finanzieren Ausbau, keine unbegrenzte Verschuldung.
 - Konkrete Zahlen (Tarife, Kosten, Zinsen) werden in M3 simuliert und kalibriert — **nicht Teil dieses GDD**.
-- **ODF-4:** Verhalten bei negativem Budget/Insolvenz (Zwangsentleihe, Zwangsverkauf von Fahrzeugen, Spieler-Pause?) — siehe Kapitel 15.
+- **Insolvenz (entschieden, ODF-4, Freigabe Glieder 2026-08-09):** Automatische Zwangsentleihe mit wachsenden Zinsen, Bausperre bei Überschuldung, **kein** automatischer Fahrzeugverkauf; Spieler-Reset nur als explizite Option im Kompetitiv-Modus — Details siehe 6.5.
+
+### 6.5 Insolvenz & Überschuldung (entschieden, ODF-4, Freigabe Glieder 2026-08-09)
+
+Regelwerk bei negativem Budget:
+
+- **Automatische Zwangsentleihe (Kredit):** Fällt das Budget unter 0, wird automatisch ein Zwangskredit aufgenommen (gleiche Mechanik wie normale Kreditaufnahme, aber ohne Spieleraktion).
+- **Wachsende Zinsen:** Der Zinssatz der Zwangsentleihe steigt mit der Dauer der Überschuldung — Zinsdruck begrenzt dauerhafte Verschuldung, Ziel ist schnelle Rückzahlung.
+- **Bausperre bei Überschuldung:** Solange der Spieler überschuldet ist (Budget < 0), sind **keine weiteren Bauaktionen und Fahrzeugkäufe möglich**.
+- **KEIN automatischer Fahrzeugverkauf:** Das System verkauft keine Fahrzeuge gegen den Willen des Spielers (keine Zwangsverkäufe).
+- **Spieler-Reset (nur explizit, Kompetitiv):** Ein vollständiger Reset (Schulden + Vermögen + Netz) existiert **nur als explizite, bestätigte Spieler-Option** und **nur im Kompetitiv-Modus** (getrennte Budgets). In Solo/Kooperativ gibt es keinen automatischen oder expliziten Reset — dort greifen ausschließlich Zwangsentleihe + Bausperre.
+
+### 6.6 Zonentarife (optional, Phase 2 — per Spiel-Einstellung)
+
+**Status: PHASE 2 (optional, per Einstellung).** Im MVP gilt der einheitliche Flächen-/Globaltarif (ODF-2). Die differenzierte Preisgestaltung je Zone ist **vollständig geplant** und wird als optionale, per Spiel-Einstellung aktivierbare Methode umgesetzt — **nicht Teil des MVP-Umfangs**.
+
+**Aktivierung:** Einstellung-Schalter im Spielmenü (Standard: **aus** → Globaltarif). Ist der Zonentarif aktiv, ersetzt er den Globaltarif für die gesamte Partie (Lockstep-konform: Einstellung ist Teil der Partie-Konfiguration/des Eingabe-Logs, kein Client-only-Toggle).
+
+**Zone-Definition (automatisch, deterministisch):** Zonen werden **automatisch erkannt**, nicht manuell gezeichnet. Zwei alternative Modi, beide deterministisch (Lockstep-konform, keine Random-Werte):
+1. **Ringzonen um das Stadtzentrum:** Kreisförmige Ringzonen mit wachsendem Radius um das Stadtzentrum; Zone-Index = Ring-Nummer der Haltestelle.
+2. **Haltestellen-Cluster:** Zonen entstehen aus räumlich dichten Haltestellen-Clustern (Cluster-Algorithmus mit festem Seed); Zone-Index = Cluster-ID der Haltestelle.
+
+**Preisregel je Zone:** `Ticketpreis = Basispreis + Zonen-Surcharge × Zone-Index` — Basispreis und Surcharge sind Spieler-Parameter. Abgerechnet wird über die Zonen-Indizes von Start- und Zielhaltestelle (höhere Zonen = teurer).
+
+**Datenmodell:**
+- `Zone-Index` als deterministisch abgeleitetes Attribut **pro Haltestelle** (aus der Zonen-Definition, Teil der Sim-Daten, Fixed-Point, ADR-006).
+- **Preis-Tabelle:** kompakte Form `Basispreis` + `Zonen-Surcharge` (zwei Skalare); optionale Erweiterung `Preis[ZoneStart][ZoneZiel]` für spätere Staffelungen.
+- Tarif-Parameter und Zonen-Definition sind Teil der Partie-Konfiguration (Eingabe-Log, Replay-/Tick-Hash-konform).
+
+**UI:**
+- **Einstellung-Schalter im Spielmenü** (Optionen → Wirtschaft): „Zonentarif" an/aus (Standard: aus).
+- **Preis-Editor:** Bei aktivem Zonentarif zeigt das Wirtschaftspanel eine Zonen-Übersicht (Zonen-Karte/-Färbung) mit Editierfeldern für Basispreis und Zonen-Surcharge; bei Globaltarif wie bisher ein einzelnes Preis-Feld.
+
+**Fahrgast-Akzeptanz:** Hohe Preise wirken als **Zufriedenheits-Penalty** (Kapitel 5.4): Je höher der effektive Ticketpreis einer Route im Verhältnis zur Erwartung, desto stärker sinkt die Zufriedenheit der Agenten. Steile Surcharges erzeugen Fahrgastverlust und bremsen Stadtwachstum — Preise bleiben ein echter Stellhebel (Kapitel 11).
+
+**i18n (hartes Gate ADR-004):** Alle neuen UI-Texte — Einstellung-Schalter, Preis-Editor, Zonen-Übersicht, Tooltips — **vollständig DE/EN**, keine hartkodierten Texte, keine Platzhalter/Stubs.
+
+**Migration / Kompatibilität:**
+- Speicherstände **ohne** Zonentarif (MVP) laden unverändert; das Zonen-System bleibt inaktiv, bis die Einstellung aktiviert wird.
+- Speicherstände **mit** aktivem Zonentarif speichern Tarif-Parameter + Zonen-Definition in der Partie-Konfiguration. Fehlt beim Laden eine Zonen-Definition (z. B. ältere Version), wird die Zonen-Erkennung deterministisch neu abgeleitet (Ringzonen um das aktuelle Stadtzentrum) und der Tarif beibehalten.
+- Ein Wechsel Globaltarif ↔ Zonentarif mitten in einer Partie ist jederzeit über die Einstellung möglich; bereits verkaufte Tickets bleiben unverändert (Abrechnung zum Zeitpunkt des Einsteigens).
 
 ---
 
@@ -235,6 +277,7 @@ Konkrete Parameter/Schwellwerte werden in der Balance-Phase (M3) kalibriert — 
 | **Bau-Menüs** | Kategorien: Straße, Schiene, Haltestelle, Depot, Tunnel/Brücke; Vorschau mit Kosten und Anschluss-Validierung (nur gültige Platzierungen freigeschaltet) |
 | **Linien-Editor** | Haltestellen-Reihenfolge, Routenführung, Takt, Fahrzeugzuweisung, Umlaufzeit- und Fahrzeugbedarfs-Anzeige |
 | **Wirtschaftspanel** | Einnahmen/Ausgaben aufgeschlüsselt (Tickets, Subventionen, Betrieb, Fahrzeuge, Bau, Kredite); Verlauf über Zeit; Kredit-/Subventions-Aktionen |
+| **Zonen-Editor** (Phase 2, optional) | Nur bei aktiviertem Zonentarif (Einstellung, siehe 6.6): Zonen-Karte/-Färbung, Editierfelder für Basispreis + Zonen-Surcharge |
 | **Stadtpanel** | Wachstums-Indikatoren (Dichte, Wohn/Gewerbe-Balance), Zufriedenheit aggregiert, Pendlerströme |
 | **Multiplayer-HUD** | Spielerliste mit **Spielerfarben** (konsistent zu Linienfarben), Budget je Modus (gemeinsam/getrennt), Verbindungs-Status, Host-Migrations-Anzeige |
 | **Replay/Desync-Diagnose** | (Dev-/Debug-Ansicht, M2) Tick-Hash-Vergleich, Replay-Log-Zugriff — internes Werkzeug, kein Spieler-Feature im MVP |
@@ -275,8 +318,8 @@ Konkrete Parameter/Schwellwerte werden in der Balance-Phase (M3) kalibriert — 
 | Ziel | Beschreibung (qualitativ) |
 |------|---------------------------|
 | **Fahrtzeiten** | U-Bahn < Tram ≤ Bus bei gleicher Distanz (Investitions-Staffelung rechtfertigt Kosten); Bus gewinnt bei kurzen Distanzen durch Netzdichte |
-| **Ticketpreis-Spannen** | Preis so dimensionierbar, dass eine gut ausgelastete Linie profitabel ist und eine schlecht ausgelastete Verluste macht — Preise sind ein echter Stellhebel, keine reine Formalie |
-| **Subventionen** | Decken Grundkosten in der Aufbauphase, koppeln aber an Netznutzung (kein passives Einkommen) |
+| **Ticketpreis-Spannen** | Preis so dimensionierbar, dass eine gut ausgelastete Linie profitabel ist und eine schlecht ausgelastete Verluste macht — Preise sind ein echter Stellhebel, keine reine Formalie (ODF-2: MVP-Globaltarif, Zonentarife optional Phase 2, siehe 6.6) |
+| **Subventionen** | Decken Grundkosten in der Aufbauphase, koppeln aber an Netznutzung (kein passives Einkommen) — **ODF-5: bedarfsbasiert je Linie, gekoppelt an Betrieb, gedeckelt** |
 | **Kredite** | Zinsdruck begrenzt unbegrenzte Verschuldung; Kreditfinanzierter Ausbau muss sich über Fahrgäste amortisieren |
 | **Zufriedenheit** | Wartezeit/Verspätung/Überfüllung wirken direkt auf Nachfrage und Wachstum — Qualität zahlt sich aus |
 | **Verkehrsmittel-Balance** | Kein Verkehrsmittel dominiert; jedes hat ein klares Einsatzgebiet (Kapitel 7) |
@@ -332,15 +375,15 @@ Konkrete Parameter/Schwellwerte werden in der Balance-Phase (M3) kalibriert — 
 
 ---
 
-## 15. Offene Design-Fragen (Freigabe-Runde)
+## 15. Design-Fragen (Freigabe-Runde)
 
-Max. 5 konkrete Fragen zur Entscheidung durch Glieder — alle Punkte sind bewusst nicht im GDD festgeschrieben:
+Alle 5 Fragen wurden durch **Glieder am 2026-08-09 freigegeben** — die Entscheidungen sind verbindlich und in den jeweiligen Kapiteln eingearbeitet. **Keine offenen Design-Fragen mehr**; neue Fragen werden künftig als neue ODF-Nummern ergänzt.
 
-1. **ODF-1 — Feste Tick-Rate:** ADR-006 nennt „z. B. 30 Ticks/s" für den Lockstep-Kern, das Gesamtkonzept 10–20 Hz für die Agenten-Simulation. Welche feste Tick-Rate für den Simulationskern (und welcher Agenten-Detail-Tick im LOD) wird verbindlich?
-2. **ODF-2 — Ticketpreis-Modell:** Einheitlicher Flächentarif (globaler Preis) vs. differenzierte Preise je Linie/Zone im MVP? (Beeinflusst Wirtschafts-UI und Balancing.)
-3. **ODF-3 — Kompetitive Regeln:** Dürfen mehrere Spieler dieselbe Haltestelle bedienen, und wie verteilen sich Fahrgäste bei parallelen Linienangeboten (Reisezeit-Gewichtung vs. Exklusivität)?
-4. **ODF-4 — Insolvenz:** Was passiert bei negativem Budget (Zwangsentleihe, Zwangsverkauf von Fahrzeugen, Sperre weiterer Bauaktionen, Spieler-Reset)?
-5. **ODF-5 — Subventions-Trigger:** Wann und wie greifen Subventionen (zeitbasiert, bedarfsbasiert je Linie, global) — und wie wird Missbrauch (Absahnen ohne Betrieb) verhindert?
+1. **ODF-1 — Feste Tick-Rate — ✅ ENTSCHIEDEN (Glieder, 2026-08-09):** Fester Kern-Tick **30 Ticks/s**, tick-basiert, feste Konstante (ADR-006). Agenten-LOD in **3 Stufen**: **30 Hz** volle Simulation in Spielernähe, **10 Hz** reduziert, **2 Hz** abstrakt. → Eingearbeitet in Kapitel 5.6.
+2. **ODF-2 — Ticketpreis-Modell — ✅ ENTSCHIEDEN (Glieder, 2026-08-09):** **Einheitlicher Flächen-/Globaltarif im MVP**; differenzierte Preise je Zone als **optionale, per Spiel-Einstellung aktivierbare Methode (Phase 2)** mit vollständiger Design-Planung (Zonen-Erkennung, Preisregel, Datenmodell, UI, Fahrgast-Akzeptanz, i18n, Migration). → Eingearbeitet in Kapitel 6.1 und 6.6.
+3. **ODF-3 — Kompetitive Regeln — ✅ ENTSCHIEDEN (Glieder, 2026-08-09):** **Mehrfachbedienung erlaubt** (keine Linien-Exklusivität); Fahrgäste wählen nach gewichteter Reisezeit. **Erweiterung: auch der Preis spielt eine Rolle** — Wahlgewichtung = **Reisezeit (dominant) + Preis (sekundär)**; Preis-Differenz als Gewichtungsfaktor im deterministischen Wahlmodell (billigere Linie kann bei ähnlicher Reisezeit bevorzugt werden). → Eingearbeitet in Kapitel 2 und 5.3.
+4. **ODF-4 — Insolvenz — ✅ ENTSCHIEDEN (Glieder, 2026-08-09):** **Automatische Zwangsentleihe (Kredit) mit wachsenden Zinsen**; **Bausperre bei Überschuldung**; **kein automatischer Fahrzeugverkauf**; **Spieler-Reset nur als explizite Option im Kompetitiv-Modus**. → Eingearbeitet in Kapitel 6.4/6.5.
+5. **ODF-5 — Subventions-Trigger — ✅ ENTSCHIEDEN (Glieder, 2026-08-09):** **Bedarfsbasiert je Linie**, gekoppelt an Betrieb (**mind. 1 aktives Fahrzeug + regelmäßige Bedienung**), **gedeckelt** — kein Absahnen ohne Betrieb. → Eingearbeitet in Kapitel 6.1 und 11.
 
 ---
 
