@@ -8,6 +8,16 @@ project: OpenMotion
 
 Entscheidung: Einzelunternehmen (Glieder arbeitet allein, 2026-08-09, siehe [[60-Decisions/ADR-008_Rechtsform-Einzelunternehmen]]). Keine GbR nötig (mind. 2 Gesellschafter). Upgrade-Pfad: später UG (haftungsbeschränkt, ab 1 €) möglich.
 
+## Status: Steamworks-Partnerkonto angelegt (2026-08-09)
+
+- **Steamworks-Partner-Account angelegt** — NDA + Steam Distribution Agreement elektronisch signiert (kostenlos).
+- **Formular durchgeführt bis zur Produkteinreichungsgebühr** (Steam Direct, 100 USD ≈ 100 EUR).
+- **Entscheidung (Glieder, 2026-08-09, gemäß Kosten-Gate/Freigabe-Regel): NICHT zahlen.** Formular an diesem Punkt bewusst abgebrochen/offen gelassen — kein Schaden, Fortschritt bleibt gespeichert.
+- **Zahlung der Steam-Direct-Gebühr verschoben auf Meilenstein M8 (Early Access Release)** — zusammen mit Bankdaten und US-Steuerformular W-8BEN (Valve verlangt beides vor Auszahlungen).
+- **Bis dahin Entwicklung mit Valve-Test-App Spacewar (App-ID 480);** echte App-ID für OpenMotion wird erst Richtung M8 angelegt.
+
+Details zur Durchführung: [[30-Resources/Steamworks-Setup-Anleitung|Steamworks-Setup-Anleitung]]. Session-Protokoll: [[50-Sessions/2026-08-09_Steamworks-Partnerkonto|Session 2026-08-09 — Steamworks-Partnerkonto]].
+
 ## Schritt 1 — Gewerbeanmeldung
 - Beim Gewerbeamt der Stadt (online oder vor Ort), Tätigkeit: "Entwicklung von Computerspielen"
 - Kosten: 20–60 €, Dauer: wenige Tage bis 2 Wochen → Gewerbeschein
@@ -59,4 +69,4 @@ Entscheidung: Einzelunternehmen (Glieder arbeitet allein, 2026-08-09, siehe [[60
 - Jetzt: nichts unternehmen
 - Nach abgeschlossener Demo (M2/M3): Gewerbeanmeldung + Geschäftskonto
 - Vor EA-Start: Steamworks-Account + App-Fee (mit Freigabe), Steuerformular W-8BEN
-- Verlinkungen: [[60-Decisions/ADR-008_Rechtsform-Einzelunternehmen]], [[10-Projects/OpenMotion/README]], [[10-Projects/OpenMotion/Projektplan]]
+- Verlinkungen: [[60-Decisions/ADR-008_Rechtsform-Einzelunternehmen]], [[10-Projects/OpenMotion/README]], [[10-Projects/OpenMotion/Projektplan]], [[30-Resources/Steamworks-Setup-Anleitung]], [[50-Sessions/2026-08-09_Steamworks-Partnerkonto]]

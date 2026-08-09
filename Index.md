@@ -25,6 +25,7 @@ updated: 2026-08-09
 - [[50-Sessions/2026-08-09_OpenMotion-M6|2026-08-09 — OpenMotion M6 (City/UI)]]
 - [[50-Sessions/2026-08-09_Projekt-Index-Cronjob|2026-08-09 — Projekt-Index-Cronjob]]
 - [[50-Sessions/2026-08-09_Rechtsform-Gruendung|2026-08-09 — Rechtsform & Gründung]]
+- [[50-Sessions/2026-08-09_Steamworks-Partnerkonto|2026-08-09 — Steamworks-Partnerkonto]]
 
 ## 🎯 Entscheidungen (ADR)
 - [[60-Decisions/ADR-001_Tech-Stack|ADR-001 — Tech Stack]]

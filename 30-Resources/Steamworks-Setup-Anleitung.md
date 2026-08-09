@@ -195,3 +195,9 @@ Bitte einmal kurz bei **Hermes / dem Team melden** — eine Nachricht reicht:
 | **2FA / Steam Guard** | Doppelte Sicherheitsabfrage beim Login (Code aufs Handy). |
 | **ZIP-Datei** | Ein gepackter Ordner; per Rechtsklick → „Alle extrahieren" entpacken. |
 | **Spacewar (480)** | Kostenlose Test-App von Valve, mit der Entwickler Steam-Funktionen testen können. |
+
+---
+
+## Verlinkungen
+- [[10-Projects/OpenMotion/Recht-Gruendung|Recht & Gründung — Checkliste & Status]] — Kosten-Gate-Entscheidung (Steam-Direct-Gebühr erst bei M8)
+- [[50-Sessions/2026-08-09_Steamworks-Partnerkonto|Session 2026-08-09 — Steamworks-Partnerkonto]] — Protokoll der Durchführung
