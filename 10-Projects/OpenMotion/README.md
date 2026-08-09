@@ -48,6 +48,7 @@ repo: D:\Entwicklung\Projekte\OpenMotion
 ## Design-Dokumente
 - [[GDD|GDD]] — Game Design Document, **freigegeben** (v0.2, Freigabe Glieder 2026-08-09)
 - [[NDD|NDD]] — Networking Design Document, **freigegeben** (v0.2, Netz-Entscheidungen Q1–Q5 inkl. Save & Resume, Glieder 2026-08-09)
+- [[Dev-Environment-Windows|Dev-Environment-Windows]] — Windows-Entwicklungsumgebung (Installationen, Verifikationen, Fallen)
 
 ## Session-Log
 - [[50-Sessions/2026-08-09_OpenMotion-Kickoff|2026-08-09 — Kickoff]]
