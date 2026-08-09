@@ -65,7 +65,7 @@ Ablauf je Welle: Aufgabe → Subagent → Auto-Review → Fehler-Doku → Git-Co
 | D1 | Art-Richtung (A: Flat Iso / B: Low-Poly / C: Semi-realistisch) | **OFFEN — wartet auf Freigabe** |
 | D2 | Logo-Familie (1–4) | **OFFEN — wartet auf Freigabe** |
 | D3 | Tech-Stack / Engine (ADR-006) | **OFFEN — wird nach D1/D2 vorgelegt** |
-| D4 | Multiplayer-Architektur (Lockstep-Details) | **OFFEN — wird im NDD vorgelegt** |
+| D4 | Multiplayer-Architektur (Lockstep-Details) | ✅ **FREIGEGEBEN** (2026-08-09, im [[10-Projects/OpenMotion/NDD|NDD v0.2]] fixiert) |
 | D5 | Monetarisierungs-Details (EA-Preis, DLC-Politik) | OFFEN — vor Phase 3 |
 
 ## 6. Risiken & Gegenmaßnahmen
