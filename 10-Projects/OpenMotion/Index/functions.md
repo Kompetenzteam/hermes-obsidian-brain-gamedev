@@ -286,11 +286,13 @@ project: OpenMotion
 - **`OnTransportMessage(TransportMessage)`** — `private void` — Dispatch nach Typ; korrupte Pakete sauber verworfen (Netz-Fuzzing NDD §11.4); Absender-Mapping geprüft (NDD §9.3).
 
 ### scripts/SimulationRunner.cs
-- **`SimulationRunner`** — `public partial class SimulationRunner : Node` — Godot-Seite der Gesamtsimulation (M4→M6.6): bindet SimulationOrchestrator in die Engine-Tick-Schleife; M6: CityView/Referenzkarte; M6.5: Demo-Linie + Fahrzeug-Visualisierung; M6.6: Referenzkarte als Wachstums-Infrastruktur + Gebäude-Visualisierung.
-- **Konstanten** — `MasterSeed = 20260809`, `DebugReportIntervalTicks = 300`, `MaxCatchUpSeconds = 0.25`, `ReferenceMapSeed = 20260809`.
-- **`_Ready()`** — `public override void _Ready()` — Start-Setup: **M6.6:** Referenzkarte EINMAL erzeugen (`MapGenerator.Generate(ReferenceMapSeed)`) — sie ist die Wachstums-Infrastruktur des CityGrowth-Subsystems (keine Mini-Startstrasse 0..60 mehr, Gebäude wachsen im Kartenbereich ~1000,1000) und wird von Rendering + Demo-Linie geteilt; Transit-Netz (2 Stops), 120 Bewohner, Subsysteme in kanonischer Reihenfolge (CityGrowth-Subsystem in Feld `_cityGrowth` gehalten), Orchestrator; danach `SetupCityView()`, M6.5: `SetupDemoTransitLine()` + `SetupVehicleVisualizer()`, M6.6: `SetupBuildingVisualizer()`.
-- **`_PhysicsProcess(double)`** — `public override void _PhysicsProcess(double delta)` — Tick-Akkumulator: feste 30-Hz-Sim-Ticks (framerate-unabhängig, Spiral-of-Death-Schutz); nach jedem Sim-Tick M6.6-Hook `_buildingVisualizer?.Refresh()` (CityGrowth ist letztes Subsystem, Gebäudebestand aktuell) und M6.5-Hook `_vehicleVisualizer?.Refresh()`; Hash-Report alle 300 Ticks.
-- **`_ExitTree()`** — `public override void _ExitTree()` — Abschlussbericht (Ticks, Hash-Berichte, Fahrzeug-Knoten + PositionAlongRoute je Fahrzeug; M6.6: Gebäude-Knoten + Sim-Gebäude-Anzahl).
+- **`SimulationRunner`** — `public partial class SimulationRunner : Node` — Godot-Seite der Gesamtsimulation (M4→M6.7): bindet SimulationOrchestrator in die Engine-Tick-Schleife; M6: CityView/Referenzkarte; M6.5: Demo-Linie + Fahrzeug-Visualisierung; M6.6: Referenzkarte als Wachstums-Infrastruktur + Gebäude-Visualisierung; M6.7: Rendering-Refresh-Throttling (Vehicles 15 Hz / Buildings 2 Hz) + PerfMonitor-Hook.
+- **Konstanten** — `MasterSeed = 20260809`, `DebugReportIntervalTicks = 300`, `MaxCatchUpSeconds = 0.25`, `ReferenceMapSeed = 20260809`; M6.7-PERF: `VehicleRefreshIntervalTicks = 2` (15 Hz), `BuildingRefreshIntervalTicks = 15` (2 Hz).
+- **PERF-Zähler** — `_vehicleRefreshCount`/`_buildingRefreshCount` (long) + `_startTimeMsec` (ulong) — Headless-Nachweis der tatsächlichen Refresh-Raten in `_ExitTree`.
+- **`_Ready()`** — `public override void _Ready()` — Start-Setup: **M6.6:** Referenzkarte EINMAL erzeugen (`MapGenerator.Generate(ReferenceMapSeed)`) — sie ist die Wachstums-Infrastruktur des CityGrowth-Subsystems (keine Mini-Startstrasse 0..60 mehr, Gebäude wachsen im Kartenbereich ~1000,1000) und wird von Rendering + Demo-Linie geteilt; Transit-Netz (2 Stops), 120 Bewohner, Subsysteme in kanonischer Reihenfolge (CityGrowth-Subsystem in Feld `_cityGrowth` gehalten), Orchestrator; danach `SetupCityView()`, M6.5: `SetupDemoTransitLine()` + `SetupVehicleVisualizer()`, M6.6: `SetupBuildingVisualizer()`; M6.7: `LogPerformanceSettings()` + PerfMonitor-Knoten (AddChild, Feld `_perfMonitor`).
+- **`_PhysicsProcess(double)`** — `public override void _PhysicsProcess(double delta)` — Tick-Akkumulator: feste 30-Hz-Sim-Ticks (framerate-unabhängig, Spiral-of-Death-Schutz); **M6.7-PERF:** Visualizer-Refresh vom Sim-Tick entkoppelt — `_vehicleVisualizer?.Refresh()` alle 2 Ticks (15 Hz), `_buildingVisualizer?.Refresh()` alle 15 Ticks (2 Hz) (nur Rendering, Sim läuft unverändert 30 Hz — Hash-Sequenz identisch zu M6.6); Hash-Report + `_perfMonitor?.LogSnapshot(tick, buildingCount)` alle 300 Ticks.
+- **`_ExitTree()`** — `public override void _ExitTree()` — Abschlussbericht (Ticks, Hash-Berichte, Fahrzeug-Knoten + PositionAlongRoute je Fahrzeug; M6.6: Gebäude-Knoten + Sim-Gebäude-Anzahl; M6.7: Transform-Update-Zahl, Refresh-Raten x/s + FPS headless, abschließender PerfMonitor-Snapshot).
+- **`LogPerformanceSettings()`** — `private void` (M6.7) — Loggt max_fps, msaa_3d, scaling_3d/scale, physics_ticks_per_second als Headless-Nachweis; dokumentiert: Godot-Physik (60 Hz) und 30-Hz-Sim laufen getrennt (Physik > Sim für Rendering-Interpolation, Determinismus NDD §3.3).
 - **`SetupCityView()`** — `private void` — Lädt CityView.tscn, instanziiert als Kind von Main, bestückt MapRenderer mit `_referenceMap.Infrastructure`, loggt Segment-/Stop-Zählung.
 - **`SetupDemoTransitLine()`** — `private void` — M6.5-Demo: Bus-Linie „Demo-Linie 1" (West→Zentrum→Ost→Süd, taktTicks 120) + 2 Busse (einer bei Zentrums-Distanz); nur aktiv wenn Netz keine Linie hat (Prototyp-Hack, TODO); verlässt sich auf den MapGenerator-Vertrag (erste 5 Road-Stops 0..4).
 - **`SetupVehicleVisualizer()`** — `private void` — VehicleVisualizer als Kind der CityView (sonst Main), Initialize(_transitNetwork).
@@ -304,21 +306,21 @@ project: OpenMotion
 - **`HashState(Action<MemoryStream>)`** — `private static ulong` — FNV-1a 64 über deterministische Serialisierung.
 - **`WriteI32`/`WriteU32`/`WriteI64`/`WriteU64`/`WriteString`** — private Little-Endian-Schreibhelfer.
 
-### scripts/BuildingVisualizer.cs (M6.6, neu)
-- **`BuildingVisualizer`** — `public partial class BuildingVisualizer : Node3D` — Gebäude-Visualisierung (M6.6, GDD 4): rendert die CityGrowth-Gebäude als 3D-Quader (BoxMesh) unter einem Parent-Knoten; sim X/Y → Godot X/Z (Y nach oben, Konvention wie MapRenderer/VehicleVisualizer); Fix32→float ausschliesslich in der Render-Schicht (Sim bleibt Fix32-exakt); reines Lesen, kein Sim-Eingriff.
+### scripts/BuildingVisualizer.cs (M6.6/M6.7, GPU-Instancing)
+- **`BuildingVisualizer`** — `public partial class BuildingVisualizer : Node3D` — Gebäude-Visualisierung (M6.6, GDD 4; M6.7-Perf-Umbau): rendert die CityGrowth-Gebäude als Instanzen EINES MultiMeshInstance3D (Einheits-BoxMesh, 1x1x1, pro Instanz skaliert/positioniert) — **Draw Calls ~1 unabhängig von N** (vorher 2 MeshInstance3D je Gebäude ⇒ 1200+ Draw Calls bei 600+ Gebäuden, User-Feedback „extremes Ruckeln"); sim X/Y → Godot X/Z (Y nach oben, Konvention wie MapRenderer/VehicleVisualizer); Fix32→float ausschliesslich in der Render-Schicht (Sim bleibt Fix32-exakt); reines Lesen, kein Sim-Eingriff.
 - **Farb-Konstanten** — `ResidentialBaseColor (0.75,0.60,0.45)`, `CommercialBaseColor (0.60,0.55,0.50)`, `IndustrialBaseColor (0.45,0.40,0.38)`, `WindowBandColor (0.16,0.15,0.14)` — Warme Farbwelt (Art-Richtung C), public static readonly.
-- **Höhen-/Abmessungs-Konstanten** — Höhenbereiche (Residential 6–10, Commercial 12–20, Industrial 8–14 m), Grundflächen (8/12/14 m), Fensterband (Dicke 0.14, 55 % Höhe, 72 % Breite), `ColorVariantsPerType = 8`.
-- **`BuildingNodeCount`** — `public int BuildingNodeCount { get; private set; }` — Anzahl instanziierter Gebäude-Knoten (Headless-Nachweis).
-- **`Initialize(CityGrowthSystem)`** — `public void Initialize(CityGrowthSystem growth)` — Registriert den Wachstums-Kern (nur Lesen, ArgumentNullException-Guard), baut den Container einmalig auf, ruft Refresh().
-- **`Refresh()`** — `public void Refresh()` — M6.6-Hook (vom SimulationRunner nach jedem Sim-Tick): hängt NUR neue Gebäude inkrementell an (Gebäude unveränderlich, nie entfernt — Anzahl-Änderung = vollständiges Dirty-Signal; M6.6-Fix gegen O(n²) Voll-Rebuild bei ~100 Gebäuden/Tick; defensiver Voll-Rebuild bei Bestands-Schrumpfung); loggt X/Z-Min/Max (Kartenbereich ~1000,1000, headless prüfbar).
-- **`BuildBuildingNode(Building)`** — `private Node3D` — Erzeugt den Quader-Knoten (Body mit Unterkante y=0 + Fensterband auf der +X-Fassade), Name `Building_{Id}_{Type}`.
-- **`HeightFor(BuildingType, uint)`** — `private static float` — Höhe je Typ, deterministisch aus Hash (Bits 8..15 → [0,1]) gestreut.
+- **Höhen-/Abmessungs-Konstanten** — Höhenbereiche (Residential 6–10, Commercial 12–20, Industrial 8–14 m), Grundflächen (8/12/14 m), `WindowBandVMin 0.305`/`WindowBandVMax 0.855` (UV-Band), `SyncIntervalMsec = 500` (Rate-Limit, max. 2 Rebuilds/s), `ColorVariantsPerType = 8`.
+- **`BuildingNodeCount`** — `public int BuildingNodeCount => _renderedCount` — Anzahl der aktuell instanziierten Gebäude (MultiMesh-Instanzen, Headless-Nachweis; Name aus Kompatibilität zu SimulationRunner erhalten — es werden keine Gebäude-Knoten mehr erzeugt).
+- **`Initialize(CityGrowthSystem)`** — `public void Initialize(CityGrowthSystem growth)` — Registriert den Wachstums-Kern (nur Lesen, ArgumentNullException-Guard), legt den MultiMeshInstance3D „Buildings" einmalig an (CreateMultiMesh), Start-Log, dann Refresh().
+- **`Refresh()`** — `public void Refresh()` — M6.6/M6.7-Hook (vom SimulationRunner gedrosselt alle 15 Sim-Ticks gerufen, intern zusätzlich zeitbasiert auf max. 2 Rebuilds/s limitiert): baut den Instanz-Puffer NUR bei Änderung der Gebäude-Anzahl neu auf (Gebäude unveränderlich — Anzahl-Änderung = vollständiges Dirty-Signal; kein Clear+Neuaufbau je Tick); schreibt alle Instanzen (Transform + Farbe) komplett neu (O(n), höchstens 2x/s), defensiver Voll-Rebuild bei Bestands-Schrumpfung; loggt X/Z-Min/Max + 1-MultiMesh-Nachweis (headless prüfbar).
+- **`CreateMultiMesh()`** — `private static MultiMesh` — Ein Einheits-BoxMesh (1x1x1) mit UseColors + Fassaden-Material; TransformFormat Transform3D.
+- **`HeightFor(BuildingType, uint)`** — `private static float` — Höhe je Typ, deterministisch aus Hash gestreut (Bits 8..15 → [0,1]).
 - **`FootprintFor(BuildingType)`** — `private static float` — Grundfläche je Typ (quadratisch).
 - **`BaseColorFor(BuildingType)`** — `private static Color` — Basis-Farbe je Typ (Art-Richtung C, warm).
-- **`MaterialFor(BuildingType, uint)`** — `private StandardMaterial3D` — Basis-Farbe × deterministische Variante (Faktor 0.90+0.025·Variante), gecacht pro (Typ, Variante) — keine Laufzeit-Allokation nach dem Warmup.
+- **`ColorFor(BuildingType, uint)`** — `private static Color` — Instanzfarbe: Basis-Farbe × deterministische Variante (Hash % 8, Faktor 0.90+0.025·Variante) — identische Formel wie M6.6, jetzt pro Instanz statt pro Material (kein Material-Cache mehr nötig).
+- **`MakeFacadeMaterial()`** — `private static StandardMaterial3D` — Albedo = prozedurale Fassaden-Textur + VertexColorUseAsAlbedo (Instanzfarbe multipliziert den Albedo), Roughness 0.92, Nearest-Filter (harte Bandkante); ein geteiltes Material für alle Instanzen.
+- **`MakeFacadeTexture()`** — `private static ImageTexture` — Prozedurale Fassaden-Textur (4x16 px, zur Laufzeit erzeugt — keine Asset-Datei): fast weiss (Instanzfarbe dominiert) mit dunklem Fensterband in 30,5 %..85,5 % der Höhe (UV-Trick statt Geometrie; dokumentierte Vereinfachung: Band erscheint auch auf der Dachfläche, BoxMesh-UVs nicht flächengetrennt).
 - **`StableHash(int)`** — `private static uint` — 32-bit-FNV-1a über die Building-Id (Little-Endian, reine Integer-Arithmetik) — gleiche Id ⇒ gleicher Hash auf allen Plattformen, kein Zufall zur Laufzeit.
-- **`ToWorld(Position)`** — `private static Vector3` — Sim-Position (Fix32 x/y) → Godot-Welt (X/Z-Ebene, Y = 0).
-- **`MakeMaterial(Color)`** — `private static StandardMaterial3D` — Albedo + Roughness 0.92.
 
 ### scripts/EnvironmentBuilder.cs (M6.6, neu)
 - **`EnvironmentBuilder`** — `public partial class EnvironmentBuilder : Node3D` — Sichtbare Umgebung für den Prototyp (M6.6, User-Feedback „nur Strassen-Kreuz auf leerem grauem Raum"): baut beim Start unter CityView Boden, Akzentflächen, WorldEnvironment (falls keins im Baum) und warme Sonne; deterministisch (feste Konstanten, kein Zufall), `Build()` idempotent, reines Rendering (Sim-Kern unberührt).
@@ -332,6 +334,12 @@ project: OpenMotion
 - **`FindWorldEnvironment(Node)`** — `private static WorldEnvironment?` — Tiefensuche nach der ersten WorldEnvironment im Teilbaum.
 - **`FindDirectionalLight(Node?)`** — `private static DirectionalLight3D?` — Tiefensuche nach dem ersten DirectionalLight3D.
 - **`F(float)`** — `private static string` — Float invariant formatieren (F2, Locale-unabhängige Logs).
+
+### scripts/PerfMonitor.cs (M6.7, neu)
+- **`PerfMonitor`** — `public partial class PerfMonitor : Node` — Performance-Logging für den Prototyp (V2-OPT Baseline, M6.7): loggt alle `LogIntervalTicks` Sim-Ticks (300 Ticks = 10 s Simzeit bei 30 Hz) einen Snapshot der Engine-Performance-Monitore (Time/Fps, Time/Process, Physics, Navigation, Rendering-Objekte/-Primitive/-Draw-Calls) + `Engine.GetFramesPerSecond()` + Gebäude-Anzahl der Simulation (CityGrowth, nur Lesen). Reines Logging — kein Sim-Eingriff, kein Determinismus-Einfluss; im Headless-Lauf liefern Rendering-Monitore 0 (Zeile dient dann als FPS-/Physics-/Process-Baseline).
+- **`LogIntervalTicks`** — `public const uint LogIntervalTicks = 300` — Log-Intervall in Sim-Ticks (300 = 10 s Simzeit bei 30 Hz).
+- **`SnapshotCount`** — `public int SnapshotCount { get; private set; }` — Anzahl bisher geschriebener Perf-Snapshots (für Verifikation/Logs).
+- **`LogSnapshot(int, int)`** — `public void LogSnapshot(int tick, int buildingCount)` — Schreibt einen Performance-Snapshot in die Konsole (Headless-Nachweis, V2-OPT Baseline); wird vom SimulationRunner alle 300 Sim-Ticks + beim Beenden gerufen.
 
 ### scripts/CameraController.cs
 - **`CameraController`** — `public partial class CameraController : Camera3D` — M6.5-Orbit-Kamera (Prototyp): State-basiert (Fokus + Yaw/Pitch/Distanz), Transform jeden Frame via LookAt; keine UI-Texte (i18n-Gate), headless-sicher.
@@ -383,17 +391,21 @@ project: OpenMotion
 - **`ResolveSteamNativeLibrary(...)`** — `private static IntPtr` — Findet steam_api64.dll im Assembly-Ausgabe- und Projektverzeichnis (libs/win-x64-Fallback).
 
 ### scripts/VehicleVisualizer.cs
-- **`VehicleVisualizer`** — `public partial class VehicleVisualizer : Node3D` — M6.5-Fahrzeug-Visualisierung: instanziiert Vehicle-Szenen (Bus/Tram/Metro) je Fahrzeug und interpoliert PositionAlongRoute entlang der Linie; reines Rendering (Fix32 → float nur hier).
+- **`VehicleVisualizer`** — `public partial class VehicleVisualizer : Node3D` — M6.5-Fahrzeug-Visualisierung: instanziiert Vehicle-Szenen (Bus/Tram/Metro) je Fahrzeug und interpoliert PositionAlongRoute entlang der Linie; reines Rendering (Fix32 → float nur hier); M6.7-PERF: Transform-only-Refresh (kein Neu-Instanziieren im Normalbetrieb) + Routen-Distanz-Cache.
 - **Szenen-Pfade** — `BusScenePath`, `TramScenePath`, `MetroScenePath` — res://scenes/vehicles/*.tscn.
 - **`LinePalette`** — `public static readonly Color[] LinePalette` — Feste 8-Spieler-Palette (GDD 10.1): Verkehrsrot, Ampelgrün, Himmelblau, Sonnengelb, Violett, Türkis, Orange, Rosé.
+- **Routen-Distanz-Cache (M6.7-PERF)** — `_routeCache` (`Dictionary<int, double[]>`, Linien-Id → kumulierte Haltestellen-Distanzen) — wird nur neu gebaut, wenn die Haltestellen-Anzahl einer Linie sich ändert; spart sqrt-/Allokations-Arbeit pro Refresh und Fahrzeug.
+- **`TransformUpdateCount`** — `public long TransformUpdateCount { get; private set; }` — PERF-Nachweis (headless): Anzahl tatsächlich ausgeführter Transform-Updates (1 je Fahrzeug je Refresh) — belegt, dass der Refresh nur Transforms setzt und nicht neu instanziiert.
 - **`VehicleNodeCount`** — `public int VehicleNodeCount` — Instanziierte Fahrzeug-Knoten (Headless-Nachweis).
 - **`Initialize(TransitNetwork)`** — `public void Initialize(...)` — Baut Knoten einmalig (nur Fahrzeuge mit Linie ≥ 2 Stops) + Refresh.
-- **`Refresh()`** — `public void Refresh()` — M6.5-Hook (nach jedem Sim-Tick): neue Fahrzeuge instanziieren, entfernte freigeben, Position + Yaw aktualisieren.
+- **`Refresh()`** — `public void Refresh()` — M6.7-PERF-Hook (vom SimulationRunner gedrosselt alle 2 Sim-Ticks = 15 Hz): instanziiert KEINE Knoten im Normalbetrieb — Knoten-Pool-Abgleich (ReconcileNodes) nur bei geänderter Fahrzeug-Anzahl (Dirty-Signal); pro Fahrzeug nur Position + Fahrtrichtung in EINER Transform-Zuweisung aus PositionAlongRoute.
+- **`ReconcileNodes()`** — `private void` (M6.7) — Gleicht den Knoten-Pool mit den Fahrzeugen des Netzes ab: neue instanziieren (nur darstellbare), entfernte freigeben (QueueFree); nur bei geänderter Fahrzeug-Anzahl nötig.
 - **`ResolveLine(Vehicle)`** — `private Line?` — Linie des Fahrzeugs (null wenn nicht zugeordnet).
 - **`BuildVehicleNode(Vehicle, Line)`** — `private Node3D` — Szene instanziieren, LineColor (Palette) vor add_child setzen (VehicleColor-Export oder Set("LineColor")).
 - **`ScenePathFor(VehicleType)`** — `private static string` — Typ → Szenen-Pfad.
 - **`LineColorFor(Line)`** — `private Color` — Palette[Linienindex % 8], deterministisch.
-- **`RouteToWorld(Line, Fix32)`** — `private static (Vector3 World, float Yaw)` — Polyline-Interpolation + Fahrtrichtung (yaw = atan2(-dx, -dz), -Z-Front).
+- **`RouteToWorld(Line, Fix32)`** — `private (Vector3 World, float Yaw)` — Polyline-Interpolation + Fahrtrichtung (yaw = atan2(-dx, -dz), -Z-Front); nutzt den Routen-Distanz-Cache (M6.7) statt Neuberechnung pro Refresh.
+- **`BuildCumulativeDistances(Line)`** — `private static double[]` (M6.7) — Kumulierte euklidische Haltestellen-Distanzen einer Linie (Meter) — Cache-Helfer für RouteToWorld.
 
 ### scenes/vehicles/VehicleColor.cs
 - **`VehicleColor`** — `public partial class VehicleColor : Node3D` — Wurzel-Skript der prozeduralen Fahrzeug-Szenen (M4): färbt Körper-Meshes per Linienfarbe.
@@ -522,14 +534,18 @@ project: OpenMotion
 ### src/OpenMotion.Core/City/CityGrowthSystem.cs
 - **`INetworkQuality`** — `public interface INetworkQuality` — Netzqualität als Wachstumstreiber (GDD 4.2): `Fix32 Quality`.
 - **`NetworkQuality`** — `public sealed class NetworkQuality : INetworkQuality` — Feste Netzqualität (Defaults/None/Full).
-- **`CityGrowthSystem`** — `public sealed class CityGrowthSystem(ulong seed)` — Automatisches Stadt-Wachstum entlang Infrastruktur (GDD 4, M3).
+- **`CityGrowthSystem`** — `public sealed class CityGrowthSystem(ulong seed)` — Automatisches Stadt-Wachstum entlang Infrastruktur (GDD 4, M3); M6.7-PERF: IsOccupied über Spatial-Hash (O(1)-Nachbarschaft statt O(N) linear — AdvanceTick 309→3020 ms → ~44 ms/Tick Release, determinismus-identisch).
 - **Wachstums-Parameter** — Basisrate 1 %, Stop-Bonus x2 (Radius 5), Spacing 1.0, Setback 1.5, MinSpacing 1.0, CheckRadius 2.5.
+- **Spatial-Hash-Parameter (M6.7-PERF)** — `SpatialCellSizeWorld = 2` (Zellgröße 2.0 Welt-Einheiten = 2x Mindestabstand 1.0 ⇒ 3x3-Nachbarschaft deckt den gesamten Interaktionsradius dist < 1.0 ab); `_spatialCells` (`Dictionary<long, List<Building>>`, reine Lookup-Struktur — keine Hash-Iteration, Zellen-Listen in Einfüge-Reihenfolge, Lockstep-konform NDD §3).
 - **`Tick(Infrastructure, INetworkQuality)`** — `public void Tick(Infrastructure infrastructure, INetworkQuality network)` — Ein Wachstums-Tick (Segment-Abtastung).
-- **`GetBuildings()`** — `public IReadOnlyList<Building> GetBuildings()` — Gebäudebestand (Entstehungsreihenfolge).
+- **`GetBuildings()`** — `public IReadOnlyList<Building> GetBuildings()` — Gebäudebestand (Entstehungsreihenfolge, unverändert trotz Spatial-Hash).
 - **`SampleAlongSegment(Infrastructure, TransportSegment, Fix32)`** — `private void` — Kandidaten exakt BuildingSetback seitlich der Trasse.
 - **`TryGrowAt(Infrastructure, Position, Fix32)`** — `private void` — Wachstums-Check (Netz-Nähe, Belegt, Rate mit Stop-Bonus).
-- **`IsOccupied(Position)`** — `private bool` — Mindestabstand prüfen.
-- **`PlaceBuilding(Position)`** — `private void` — Wohn/Gewerbe-Abfolge, Kapazität/Wohlstand aus RNG.
+- **`IsOccupied(Position)`** — `private bool` — M6.7-PERF: Mindestabstand-Check über die 3x3-Nachbarzellen des Spatial-Hash (O(1)-Nachbarschaft statt O(N) über alle Gebäude); Distanzvergleich unverändert (< MinSpacingSq) ⇒ gleiche bool-Rückgabe je Kandidat ⇒ RNG-Verbrauch und Kandidaten-Reihenfolge unverändert ⇒ bit-identische Stadt.
+- **`PlaceBuilding(Position)`** — `private void` — Wohn/Gewerbe-Abfolge, Kapazität/Wohlstand aus RNG; trägt das Gebäude zusätzlich in den Spatial-Hash ein (AddToSpatialIndex).
+- **`AddToSpatialIndex(Building)`** — `private void` (M6.7) — Trägt ein Gebäude in die Spatial-Hash-Zelle seines Fußabdrucks ein (Einfüge-Reihenfolge = Entstehungsreihenfolge, deterministisch).
+- **`CellOf(Fix32)`** — `private static int` (M6.7) — Zellindex (floor) einer Fix32-Koordinate bei Zellgröße 2.0 — reine Integer-Arithmetik (floor-Semantik für negative Werte).
+- **`CellKey(int, int)`** — `private static long` (M6.7) — Packt Zellkoordinaten in einen eindeutigen long-Schlüssel (Lookup-Key, kein Iterations-Output).
 - **`Ratio(int, int)`** — `private static Fix32` — int-Verhältnis als Fix32.
 - **`ISqrt(ulong)`/`Sqrt(Fix32)`** — private Ganzzahl-/Fix32-Wurzel (bit-by-bit).
 
@@ -563,6 +579,12 @@ project: OpenMotion
 - **`ApplySubsidies(IReadOnlyList<LineEconomicStatus>)`** — `public Fix32 ApplySubsidies(...)` — Bedarfsbasierte Subventionen je Linie (ODF-5: Betrieb + Service-Gap ≤ Max, gedeckelt).
 - **`Tick()`** — `public void Tick()` — Tick-Abschluss: Zinsen kapitalisieren, Insolvenzprüfung (wachsende Zinsen, gedeckelt).
 
+### src/OpenMotion.Core.Tests/CityGrowthTests.cs (M6.7, +2 Spatial-Hash-Tests)
+- **`CityGrowthTests`** — xUnit: Infrastruktur-Datenmodell + automatisches Stadt-Wachstum (M3, GDD 3/4) — `GetSegmentsNear_ReturnsOnlySegmentsWithinRadius`, `GetSegmentsNear_EndpointDistance_IsRespected`, `AddStop_CanBeQueriedViaGetStopsNear`, `NoInfrastructure_NoGrowth`, `ZeroNetworkQuality_NoGrowth`, `RoadAndSeed_GrowsBuildingsBesideRoad_NotFarAway`, `SameSeed_ProducesIdenticalBuildings`, `Growth_ProducesResidentialAndCommercial`, `StopProximity_AcceleratesGrowth`, `LowerNetworkQuality_SlowsGrowth` — alle unverändert grün (Spatial-Hash determinismus-identisch, keine Test-Anpassung nötig).
+- **`SpatialHash_LargeGrowthRun_CompletesFast`** — `[Fact]` (M6.7, +1): PERF-Nachweis — 8 Strassen à 2500 m ⇒ 40.016 Kandidaten/Tick, 12 Ticks ⇒ ≥ 2000 Gebäudeplatzierungen in < 5 s (lineare Variante: Minuten-Bereich).
+- **`SpatialHash_LargeScenario_SameSeedProducesIdenticalBuildings`** — `[Fact]` (M6.7, +1): Determinismus-Nachweis auf dem Spatial-Hash-Pfad — 2000+ Gebäude bei gleichem Seed bit-identisch (Id/Position/Typ/Kapazität/Wohlstand).
+- **Test-Helfer** — `P(decimal, decimal)` (Fix32-Position), `RunGrowth(seed, ticks, infrastructure?, quality?)`, `RoadInfrastructure()`, `BuildRoadInfrastructure(start, end)`, `LargeRoadNetwork()` (M6.7: 8 parallele Strassen à 2500 m für den Performance-Nachweis).
+
 ### src/OpenMotion.Core.Tests/InMemoryTransport.cs (Test-Double, M5)
 - **`InMemoryTransportHub`** — `public sealed class InMemoryTransportHub` — In-Memory-Transport-Netz (NDD §11.2 „Fake-Transport"): registriert Transports unter stabilen Peer-Ids, synchron/geordnet (Send-Reihenfolge = Empfangs-Reihenfolge pro Peer-Paar).
 - **`CreateTransport(string)`** — `public InMemoryTransport CreateTransport(string peerId)` — Erzeugt + registriert (Duplikat → ArgumentException).
@@ -592,9 +614,8 @@ project: OpenMotion
 - **`P2PSessionTests`** — Broadcast an 2 Peers (beide empfangen denselben Frame), gezielter Send (nur Ziel), Teilnehmerliste auto via Connect/Disconnect (eigene ID nie Teilnehmer), DesyncReport-Event, Send an Nicht-Teilnehmer → ArgumentException.
 - **Test-Helfer** — `Drain(InMemoryTransport)` (Queue leeren).
 
-### src/OpenMotion.Core.Tests/* (xUnit-Testsuiten, unverändert)
+### src/OpenMotion.Core.Tests/* (xUnit-Testsuiten, Bestand)
 - **`CitizensTests`** — Tagesplan-Determinismus, Home→Work→Home, Leisure-Fenster, Warte-Decay, Zufriedenheit in [0,1] über 3 Tage, RoutingPreference (7 Fälle), CitizenSystem-Spawn/Tick (mit/ohne Netz).
-- **`CityGrowthTests`** — GetSegmentsNear/GetStopsNear, kein Wachstum ohne Infrastruktur/Qualität, Gebäude NEBEN der Strasse, Determinismus, Residential+Commercial, Stop-Bonus, Qualitäts-Einfluss.
 - **`DeterministicRandomTests`** — Seed-Identität, Golden-Sequenz (Referenzwerte verankert), Bereichsgarantien, Reproduzierbarkeit.
 - **`EconomySystemTests`** — FareSystem (exakte Erlöse), EarnTickets/PayOperatingCosts, Bausperre, Zwangsentleihe + wachsende Zinsen (exakt), Subventionen (Deckel, Service-Gap), 50-Tick-Determinismus.
 - **`Fix32Tests`** — Arithmetik, Saturierung (Add/Mul-Overflow), Div-by-0-Ersatzwert, Roundtrips (decimal/double), InvariantCulture-ToString.

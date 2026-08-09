@@ -55,7 +55,7 @@ project: OpenMotion
 | Citizens/RoutingPreference.cs | Fix32; definiert RouteOption |
 | City/Building.cs | Position, Fix32; definiert BuildingType |
 | City/Infrastructure.cs | Position, TransportSegment, Stop, SegmentType, Fix32 |
-| City/CityGrowthSystem.cs | Infrastructure, TransportSegment, Position, INetworkQuality, Building, BuildingType, DeterministicRandom, Fix32 |
+| City/CityGrowthSystem.cs | Infrastructure, TransportSegment, Position, INetworkQuality, Building, BuildingType, DeterministicRandom, Fix32; M6.7: Spatial-Hash (Dictionary<long, List<Building>>, System.Collections.Generic via implicit usings — keine neuen using) |
 | Economy/FareSystem.cs | Fix32; definiert IFarePolicy, GlobalFarePolicy |
 | Economy/LineEconomicStatus.cs | Fix32 |
 | Economy/EconomySystem.cs | Fix32, LineEconomicStatus |
@@ -66,20 +66,21 @@ project: OpenMotion
 |-------|----------------|
 | OpenMotion.csproj | Godot.NET.Sdk/4.7.1; ProjectReference → OpenMotion.Core.csproj; PackageReference Steamworks.NET 2024.8.0 (SDK 1.60); None libs/win-x64/steam_api64.dll → Output; Compile-Remove `src/**/*.cs` |
 | OpenMotion.sln | Enthält OpenMotion, OpenMotion.Core, OpenMotion.Core.Tests |
-| project.godot | main_scene = scenes/Main.tscn; Assembly OpenMotion; Autoload: LocalizationManager + SteamManager; [input] 8 Kamera-Actions; i18n: de/en ui.po; GL Compatibility |
+| project.godot | main_scene = scenes/Main.tscn; Assembly OpenMotion; Autoload: LocalizationManager + SteamManager; [input] 8 Kamera-Actions; i18n: de/en ui.po; GL Compatibility; M6.7-PERF: `run/max_fps=0` (Kommentar dokumentiert „max_fps 60" — Wert ist 0/unbegrenzt, Diskrepanz im Projekt selbst), `msaa_3d=0`, `scaling_3d/scale=1.0`, `[physics] common/physics_ticks_per_second=60` (dokumentiert) |
 | scenes/Main.tscn | ext_resource → scripts/SimulationRunner.cs |
 | scenes/city/CityView.tscn | ext_resource → scripts/MapRenderer.cs, scripts/CameraController.cs, scripts/EnvironmentBuilder.cs (M6.6); Sun-Knoten deklarativ warm (light_energy 1.15, light_color) |
 | scenes/ui/HUD.tscn | ext_resource → scripts/HUD.cs |
 | scenes/vehicles/Bus.tscn / Tram.tscn / Metro.tscn | ext_resource → scenes/vehicles/VehicleColor.cs |
-| scripts/SimulationRunner.cs | Godot; OpenMotion.Core (.Map, .Citizens, .City, .Economy, .Lockstep, .Simulation, .Transit); : Node; implementiert ISimulationSubsystem (Adapter), ITransitNetwork (Bridge); M6.6: Referenzkarte aus MapGenerator.Generate (Wachstums-Infrastruktur + Rendering + Demo-Linie geteilt), instanziiert VehicleVisualizer + BuildingVisualizer (SetupBuildingVisualizer, `_cityGrowth.Growth`) via CityView.tscn |
-| scripts/BuildingVisualizer.cs | Godot; OpenMotion.Core.City (CityGrowthSystem, Building, BuildingType, Position); Fix32 (Position.ToDouble in ToWorld); : Node3D; Kind der CityView (vom SimulationRunner instanziiert) |
+| scripts/SimulationRunner.cs | Godot; OpenMotion.Core (.Map, .Citizens, .City, .Economy, .Lockstep, .Simulation, .Transit); : Node; implementiert ISimulationSubsystem (Adapter), ITransitNetwork (Bridge); M6.6: Referenzkarte aus MapGenerator.Generate (Wachstums-Infrastruktur + Rendering + Demo-Linie geteilt), instanziiert VehicleVisualizer + BuildingVisualizer (SetupBuildingVisualizer, `_cityGrowth.Growth`) via CityView.tscn; M6.7: instanziiert PerfMonitor (LogSnapshot-Hook alle 300 Ticks + beim Beenden), Refresh-Throttling (Vehicles alle 2 / Buildings alle 15 Sim-Ticks), LogPerformanceSettings |
+| scripts/BuildingVisualizer.cs | Godot (MultiMeshInstance3D, MultiMesh, BoxMesh, StandardMaterial3D, ImageTexture); OpenMotion.Core.City (CityGrowthSystem, Building, BuildingType, Position); Fix32 (Position.ToDouble in ToWorld); : Node3D; Kind der CityView (vom SimulationRunner instanziiert); M6.7: GPU-Instancing — EIN MultiMesh (Draw Calls ~1, unabhängig von N), Fassaden-Textur zur Laufzeit erzeugt |
+| scripts/PerfMonitor.cs | Godot (Node, Engine.GetFramesPerSecond, Performance.GetMonitor); : Node; wird vom SimulationRunner instanziiert (LogSnapshot alle 300 Ticks) |
 | scripts/CameraController.cs | Godot; : Camera3D; Input-Actions aus project.godot [input] (camera_orbit/zoom/pan_*/height_*) |
 | scripts/EnvironmentBuilder.cs | Godot (Node3D, MeshInstance3D, BoxMesh, WorldEnvironment, ProceduralSkyMaterial, DirectionalLight3D, StandardMaterial3D); System.Globalization (CultureInfo.InvariantCulture); Knoten in scenes/city/CityView.tscn |
 | scripts/HUD.cs | Godot; LocalizationManager (LanguageChanged-Event); Tr() i18n |
 | scripts/LocalizationManager.cs | Godot (TranslationServer, ResourceLoader, Translation); i18n/de+en/LC_MESSAGES/ui.po |
 | scripts/MapRenderer.cs | Godot; OpenMotion.Core.City (Infrastructure, TransportSegment, Stop, Position, SegmentType); Fix32 (ToWorld) |
 | scripts/SteamManager.cs | Godot; Steamworks.NET (SteamAPI, SteamFriends); System.Runtime.InteropServices (NativeLibrary) |
-| scripts/VehicleVisualizer.cs | Godot; OpenMotion.Core (Fix32), OpenMotion.Core.Transit (TransitNetwork, Vehicle, Line, VehicleType); VehicleColor (LineColor-Export); Szenen res://scenes/vehicles/*.tscn |
+| scripts/VehicleVisualizer.cs | Godot; OpenMotion.Core (Fix32), OpenMotion.Core.Transit (TransitNetwork, Vehicle, Line, VehicleType); VehicleColor (LineColor-Export); Szenen res://scenes/vehicles/*.tscn; M6.7: Transform-only-Update (Knoten-Pool + Routen-Distanz-Cache, keine neuen using) |
 | scenes/vehicles/VehicleColor.cs | Godot; : Node3D |
 
 ### Tests (xUnit, net8.0)
@@ -88,7 +89,7 @@ project: OpenMotion
 |-------|----------------|
 | OpenMotion.Core.Tests.csproj | ProjectReference → OpenMotion.Core; xunit 2.9.2, Microsoft.NET.Test.Sdk 17.11.1, xunit.runner.visualstudio 2.8.2 |
 | CitizensTests.cs | OpenMotion.Core.Citizens, Xunit; ITransitNetwork (Test-Double AlwaysAvailableNetwork) |
-| CityGrowthTests.cs | OpenMotion.Core.City, Xunit |
+| CityGrowthTests.cs | OpenMotion.Core.City, Xunit; M6.7: +2 Spatial-Hash-Tests (LargeRoadNetwork mit 8×2500-m-Strassen, Stopwatch-Performance-Nachweis) |
 | DeterministicRandomTests.cs | OpenMotion.Core, Xunit |
 | EconomySystemTests.cs | OpenMotion.Core.Economy, Xunit; DeterministicRandom (Test-Befehlsquelle) |
 | Fix32Tests.cs | OpenMotion.Core, Xunit |
@@ -115,7 +116,7 @@ project: OpenMotion
 | export_presets.cfg | Godot-Export: Windows Desktop, x86_64, embed_pck; Icon res://assets/logo/logo_clean.png; Ziel build/openmotion_windows.exe |
 | docs/STEAMWORKS_SETUP_ANLEITUNG.md | Steamworks-Partnerkonto, App-ID, SDK, Spacewar-Testapp (Doku, keine Code-Abhängigkeit) |
 
-## Impact-Map (Stand 2026-08-09, nach M6.6)
+## Impact-Map (Stand 2026-08-09, nach M6.7)
 
 *Bei Änderungen an Kernmodulen sind folgende Dateien potenziell betroffen (aus den Abhängigkeiten abgeleitet):*
 
@@ -148,6 +149,12 @@ project: OpenMotion
 - **VehicleVisualizer.cs** → SimulationRunner (M6.5-Hook), VehicleColor.cs, scenes/vehicles/*.tscn
 - **Godot-Szenen (Bus/Tram/Metro.tscn)** → VehicleColor.cs (Skript-Bindung), VehicleVisualizer (Instanziierung), CHANGELOG
 - **project.godot** → SimulationRunner (Autoload-Kette), CameraController (Input-Actions), LocalizationManager/SteamManager (Autoload), Main.tscn
+- **CityGrowthSystem.cs (M6.7, Spatial-Hash)** → `IsOccupied` O(1)-Nachbarschaft statt O(N) linear; betroffen: CityGrowthTests (+2 PERF-/Determinismus-Tests), BuildingVisualizer (GetBuildings unverändert), SimulationRunner (Growth-Exposé). Determinismus bit-identisch (gleiche bool-Rückgabe je Kandidat ⇒ RNG-Verbrauch unverändert) — KEINE Hash-Baseline-Änderung, bestehende Tests unverändert grün. Vertrag: Zellgröße 2.0 = 2× Mindestabstand 1.0 (3x3 deckt den Interaktionsradius ab) — Änderungen an Zellgröße/Radius erfordern Test-Anpassung
+- **BuildingVisualizer.cs (M6.7, GPU-Instancing)** → SimulationRunner (Refresh alle 15 Sim-Ticks, 2 Hz), CityGrowthSystem (GetBuildings, nur Lesen), CityView.tscn (Parent-Knoten); Draw-Calls ~1 unabhängig von N — reines Rendering, kein Sim-Einfluss (Hash-Sequenz identisch zu M6.6)
+- **VehicleVisualizer.cs (M6.7, Transform-only)** → SimulationRunner (Refresh alle 2 Sim-Ticks, 15 Hz), VehicleColor.cs, scenes/vehicles/*.tscn; Routen-Distanz-Cache + Knoten-Pool (ReconcileNodes) — kein Sim-Einfluss
+- **PerfMonitor.cs (M6.7, neu)** → SimulationRunner (LogSnapshot-Hook alle 300 Ticks + _ExitTree-Abschluss-Snapshot); reines Logging, keine Abhängigkeit auf Sim-Zustand außer Gebäude-Zähler (nur Lesen)
+- **project.godot (M6.7-PERF)** → SimulationRunner (LogPerformanceSettings liest max_fps/msaa_3d/scale/physics_ticks_per_second), Rendering-Pfad (MSAA aus, Scale 1.0), Physik-Takt 60 Hz; Hinweis: `run/max_fps=0` (Kommentar/CHANGELOG dokumentieren 60 — Diskrepanz im Projekt, Wert 0 = unbegrenzt)
+- **CityGrowthTests.cs (M6.7, +2)** → CityGrowthSystem-Spatial-Hash-Vertrag (O(1)-Nachbarschaft, Determinismus bit-identisch, ≥ 2000 Platzierungen in < 5 s bei 40.016 Kandidaten/Tick); Anpassung nötig, falls Zellgröße/Interaktionsradius geändert werden
 - **OpenMotion.csproj** → SteamManager (Steamworks.NET), alle Godot-Skripte (Kompilierung), steam_api64.dll
 
 ## Kernmodule
@@ -164,9 +171,9 @@ project: OpenMotion
 | **Wirtschaft (M3)** | EconomySystem.cs, FareSystem.cs, LineEconomicStatus.cs | Budget, Tarife (ODF-2), Zwangsentleihe mit wachsenden Zinsen (ODF-4), bedarfsbasierte Subventionen (ODF-5) |
 | **Bewohner (M3)** | Citizen.cs, CitizenSystem.cs, RoutingPreference.cs | SIM-Agenten (10k+ Ziel), deterministische Tagespläne, Fahrgast-Wahlmodell (ODF-3), Integrations-Naht ITransitNetwork |
 | **Transit (M3/M4)** | TransitNetwork.cs, Line.cs, Stop.cs, Vehicle.cs, VehicleType.cs, TransitMath.cs, PassengerFlow.cs, VehicleMovementSystem.cs | Netz-Datenmodell mit deterministischen IDs, Linien/Fahrzeuge, Fahrgast-Wechsel, Bewegung entlang der Route |
-| **Stadt (M3)** | Infrastructure.cs, Building.cs, CityGrowthSystem.cs | Gebaute Infrastruktur (Segmente/Haltestellen), automatisches Wachstum entlang der Wege (GDD 4) |
-| **Godot-Integration (M4→M6.6)** | scripts/SimulationRunner.cs, CameraController.cs, MapRenderer.cs, VehicleVisualizer.cs, BuildingVisualizer.cs, EnvironmentBuilder.cs, scenes/*.tscn, VehicleColor.cs | 30-Hz-Tick-Akkumulator, deterministische Subsystem-Adapter, Referenzkarten-Rendering, Orbit-Kamera, Fahrzeug-Visualisierung, Gebäude-Visualisierung (M6.6), Umgebung (Boden/Himmel/Sonne, M6.6), prozedurale Fahrzeugmodelle |
+| **Stadt (M3/M6.7)** | Infrastructure.cs, Building.cs, CityGrowthSystem.cs | Gebaute Infrastruktur (Segmente/Haltestellen), automatisches Wachstum entlang der Wege (GDD 4); M6.7: Spatial-Hash für IsOccupied (O(1)-Nachbarschaft, determinismus-identisch) — AdvanceTick 309→3020 ms → ~44 ms/Tick Release |
+| **Godot-Integration (M4→M6.7)** | scripts/SimulationRunner.cs, CameraController.cs, MapRenderer.cs, VehicleVisualizer.cs, BuildingVisualizer.cs, EnvironmentBuilder.cs, PerfMonitor.cs, scenes/*.tscn, VehicleColor.cs | 30-Hz-Tick-Akkumulator, deterministische Subsystem-Adapter, Referenzkarten-Rendering, Orbit-Kamera, Fahrzeug-Visualisierung, Gebäude-Visualisierung (M6.6), Umgebung (Boden/Himmel/Sonne, M6.6), prozedurale Fahrzeugmodelle; M6.7-PERF: GPU-Instancing (MultiMesh, Draw Calls ~1), Refresh-Throttling (15 Hz/2 Hz), PerfMonitor-Logging |
 | **i18n (M6)** | scripts/LocalizationManager.cs, scripts/HUD.cs, scenes/ui/HUD.tscn, i18n/de|en/LC_MESSAGES/ui.po | DE = Spielsprache (ADR-004), EN zweite Sprache, LanguageChanged-Event, Paritäts-Gate |
 | **Steamworks (M5)** | scripts/SteamManager.cs, OpenMotion.csproj (Steamworks.NET), libs/win-x64/steam_api64.dll, docs/STEAMWORKS_SETUP_ANLEITUNG.md | SteamAPI-Init/Shutdown (App-ID 480), crash-sicher, headless-CI-tauglich; Sim-Kern bleibt Steam-frei |
-| **Tests** | src/OpenMotion.Core.Tests/*.cs (16 Suiten inkl. M5/M6-Neu) | xUnit: Determinismus-, Roundtrip-, Netz- und Validierungsabdeckung (ADR-004/006); CI auf Windows+Linux |
+| **Tests** | src/OpenMotion.Core.Tests/*.cs (16 Suiten inkl. M5/M6/M6.7-Neu) | xUnit: Determinismus-, Roundtrip-, Netz- und Validierungsabdeckung (ADR-004/006); M6.7: +2 Spatial-Hash-Tests (Performance + Determinismus, 40.016 Kandidaten/Tick); CI auf Windows+Linux |
 | **CI/CD + Export** | .github/workflows/ci.yml, export_presets.cfg | Headless-Import + Build + Tests auf windows-latest/ubuntu-latest; Windows-Desktop-Export (build/openmotion_windows.exe) |
