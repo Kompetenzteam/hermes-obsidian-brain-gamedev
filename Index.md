@@ -21,6 +21,7 @@ updated: 2026-08-09
 - [[50-Sessions/2026-08-09_Token-Optimierung|2026-08-09 — Token-Optimierung]]
 - [[50-Sessions/2026-08-09_OpenMotion-Kickoff|2026-08-09 — OpenMotion Kickoff]]
 - [[50-Sessions/2026-08-09_OpenMotion-M1-M3|2026-08-09 — OpenMotion M1–M3]]
+- [[50-Sessions/2026-08-09_OpenMotion-M4-M5|2026-08-09 — OpenMotion M4–M5]]
 - [[50-Sessions/2026-08-09_Projekt-Index-Cronjob|2026-08-09 — Projekt-Index-Cronjob]]
 - [[50-Sessions/2026-08-09_Rechtsform-Gruendung|2026-08-09 — Rechtsform & Gründung]]
 

@@ -20,6 +20,7 @@ status: active
 - [x] M2 Multiplayer-Kern: Lockstep ✅ (Input/Replay/TickHash/Session, 42 Tests)
 - [x] M3 Simulation ✅ — Economy (Budget/Subventionen/Kredite), Transit (Bus/Tram/Metro), Citizens (Routing Reisezeit+Preis), City-Growth (entlang Transportwegen), Orchestrator (Hash alle 10 Ticks), Serialization/Replay-Export — **147 Tests grün**
 - [x] M4 Vehicles ✅ — VehicleMovementSystem (deterministische Bewegung, Stop-Ankünfte, Fahrgast-Wechsel), Godot-Modelle (Bus/Tram/Metro .tscn), SimulationRunner (30 Hz in Godot, Hash 0x407B0763D2ABA9CB bei Tick 300) — **173 Tests grün**
+- [x] M5 Steam MP ✅ — Steamworks.NET (App-ID 480, SteamManager, kein Crash ohne Steam), Netz-Transport (ITransport/InMemoryTransport deterministisch/P2PSession/Netcode), MultiplayerSession (Host-Ordnungsgeber, Seed-Verteilung, Desync-Erkennung via Tick-Hash) — **206 Tests grün**; Steamworks-Setup-Anleitung in `docs/STEAMWORKS_SETUP_ANLEITUNG.md`
 - [ ] P0 Kern-Wirtschaftssimulation (Budget, Passagierströme, Tarife) — integriert, UI-Anbindung offen
 - [ ] P0 Linienplanung (Haltestellen, Routen, Fahrpläne) — Kern fertig, UI offen
 - [ ] P0 Verkehrsmittel: Bus / Tram / U-Bahn — Datenmodell fertig, Rendering offen (M4)
