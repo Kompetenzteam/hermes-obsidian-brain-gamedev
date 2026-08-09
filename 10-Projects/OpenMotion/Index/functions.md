@@ -150,11 +150,11 @@ project: OpenMotion
 - **`RailSegmentCount`** — `public int RailSegmentCount` — Anzahl Schienen-Segmente (Tram/U-Bahn, GDD 3.1).
 
 ### src/OpenMotion.Core/Map/MapGenerator.cs
-- **`MapGenerator`** — `public static class MapGenerator` — Deterministischer Referenzkarten-Generator (M6): Seed → Straßen-Kreuz (4 Segmente) + 2 Schienen-Segmente (Ost-West-Korridor + Verbindungs-Spur) + 8 Start-Haltestellen; reine Fix32-Arithmetik (NDD §3.1/§3.3).
+- **`MapGenerator`** — `public static class MapGenerator` — Deterministischer Referenzkarten-Generator (M6/M6.6, GDD MVP: 1 Stadt-Typ): Seed → **Stadt-Quadranten-Muster** — Hauptkreuz (4 Arme, Armlänge 350–600 seed-abhängig) + 2 parallele Strassen (Abstand 200–300) + 2 Querstrassen + aussenliegender Ring ⇒ **10 Road-Segmente**; **2 Gehweg-Segmente** (diagonale Park-Wege durch die Nord-Bloecke); **3 Rail-Segmente** (Ost-West-Korridor + Spur vom südlichen Arm-Ende + neue Nord-Süd-Verbindung durchs Zentrum); **17 Start-Haltestellen** (13 Road + 4 Rail, GDD 3.1 am Netz verankert). Reine Fix32-/Integer-Arithmetik (NDD §3.1/§3.3), feste seed-unabhängige Zieh-Reihenfolge (NDD §3.2) — Lockstep-konform. **Vertrag (unverändert seit M6):** die ersten 5 Road-Stops sind in Einfüge-Reihenfolge 0=Zentrum, 1=West, 2=Ost, 3=Süd, 4=Nord (West auf gleicher Y wie Zentrum) — darauf baut die Demo-Linie in scripts/SimulationRunner.cs (SetupDemoTransitLine) auf.
 - **`DefaultWidth`** — `public const int DefaultWidth = 2000` — Standard-Weltbreite.
 - **`DefaultHeight`** — `public const int DefaultHeight = 2000` — Standard-Welthöhe.
 - **`Generate(ulong)`** — `public static MapData Generate(ulong seed)` — Referenzkarte mit Standard-Dimensionen 2000×2000.
-- **`Generate(ulong, Fix32, Fix32)`** — `public static MapData Generate(ulong seed, Fix32 width, Fix32 height)` — Karte mit expliziten Dimensionen; seed-abhängige Geometrie (Kreuz-Armlänge 250–500, Korridor-Offset 120–240, Korridor-Länge 350–500) via DeterministicRandom.
+- **`Generate(ulong, Fix32, Fix32)`** — `public static MapData Generate(ulong seed, Fix32 width, Fix32 height)` — Karte mit expliziten Dimensionen; seed-abhängige Geometrie (Blockabstand 200–300, Kreuz-Armlänge 350–600, Korridor-Offset 120–240, Korridor-Länge 350–500, Nord-Verbindung 120–240) via DeterministicRandom in fester, verzweigungsfreier Zieh-Reihenfolge.
 
 ### src/OpenMotion.Core/Map/MapSerializer.cs
 - **`MapSerializer`** — `public sealed class MapSerializer` — Deterministische MapData-Serialisierung (M6, NDD §3.5): eigene feste JSON-Kodierung (Utf8JsonWriter/JsonDocument), Fix32 als Raw-long, Format-Version 1.
@@ -286,21 +286,52 @@ project: OpenMotion
 - **`OnTransportMessage(TransportMessage)`** — `private void` — Dispatch nach Typ; korrupte Pakete sauber verworfen (Netz-Fuzzing NDD §11.4); Absender-Mapping geprüft (NDD §9.3).
 
 ### scripts/SimulationRunner.cs
-- **`SimulationRunner`** — `public partial class SimulationRunner : Node` — Godot-Seite der Gesamtsimulation (M4→M6.5): bindet SimulationOrchestrator in die Engine-Tick-Schleife; M6: CityView/Referenzkarte; M6.5: Demo-Linie + Fahrzeug-Visualisierung.
+- **`SimulationRunner`** — `public partial class SimulationRunner : Node` — Godot-Seite der Gesamtsimulation (M4→M6.6): bindet SimulationOrchestrator in die Engine-Tick-Schleife; M6: CityView/Referenzkarte; M6.5: Demo-Linie + Fahrzeug-Visualisierung; M6.6: Referenzkarte als Wachstums-Infrastruktur + Gebäude-Visualisierung.
 - **Konstanten** — `MasterSeed = 20260809`, `DebugReportIntervalTicks = 300`, `MaxCatchUpSeconds = 0.25`, `ReferenceMapSeed = 20260809`.
-- **`_Ready()`** — `public override void _Ready()` — Start-Setup: Infrastruktur (1 Strasse + 2 Stops), Transit-Netz (2 Stops), 120 Bewohner, Subsysteme in kanonischer Reihenfolge, Orchestrator; danach M6: `MapGenerator.Generate(ReferenceMapSeed)` + `SetupCityView()`; M6.5: `SetupDemoTransitLine()` + `SetupVehicleVisualizer()`.
-- **`_PhysicsProcess(double)`** — `public override void _PhysicsProcess(double delta)` — Tick-Akkumulator: feste 30-Hz-Sim-Ticks (framerate-unabhängig, Spiral-of-Death-Schutz), nach jedem Sim-Tick `_vehicleVisualizer?.Refresh()` (M6.5-Hook), Hash-Report alle 300 Ticks.
-- **`_ExitTree()`** — `public override void _ExitTree()` — Abschlussbericht (Ticks, Hash-Berichte, Fahrzeug-Knoten + PositionAlongRoute je Fahrzeug).
+- **`_Ready()`** — `public override void _Ready()` — Start-Setup: **M6.6:** Referenzkarte EINMAL erzeugen (`MapGenerator.Generate(ReferenceMapSeed)`) — sie ist die Wachstums-Infrastruktur des CityGrowth-Subsystems (keine Mini-Startstrasse 0..60 mehr, Gebäude wachsen im Kartenbereich ~1000,1000) und wird von Rendering + Demo-Linie geteilt; Transit-Netz (2 Stops), 120 Bewohner, Subsysteme in kanonischer Reihenfolge (CityGrowth-Subsystem in Feld `_cityGrowth` gehalten), Orchestrator; danach `SetupCityView()`, M6.5: `SetupDemoTransitLine()` + `SetupVehicleVisualizer()`, M6.6: `SetupBuildingVisualizer()`.
+- **`_PhysicsProcess(double)`** — `public override void _PhysicsProcess(double delta)` — Tick-Akkumulator: feste 30-Hz-Sim-Ticks (framerate-unabhängig, Spiral-of-Death-Schutz); nach jedem Sim-Tick M6.6-Hook `_buildingVisualizer?.Refresh()` (CityGrowth ist letztes Subsystem, Gebäudebestand aktuell) und M6.5-Hook `_vehicleVisualizer?.Refresh()`; Hash-Report alle 300 Ticks.
+- **`_ExitTree()`** — `public override void _ExitTree()` — Abschlussbericht (Ticks, Hash-Berichte, Fahrzeug-Knoten + PositionAlongRoute je Fahrzeug; M6.6: Gebäude-Knoten + Sim-Gebäude-Anzahl).
 - **`SetupCityView()`** — `private void` — Lädt CityView.tscn, instanziiert als Kind von Main, bestückt MapRenderer mit `_referenceMap.Infrastructure`, loggt Segment-/Stop-Zählung.
-- **`SetupDemoTransitLine()`** — `private void` — M6.5-Demo: Bus-Linie „Demo-Linie 1" (West→Zentrum→Ost→Süd, taktTicks 120) + 2 Busse (einer bei Zentrums-Distanz); nur aktiv wenn Netz keine Linie hat (Prototyp-Hack, TODO).
+- **`SetupDemoTransitLine()`** — `private void` — M6.5-Demo: Bus-Linie „Demo-Linie 1" (West→Zentrum→Ost→Süd, taktTicks 120) + 2 Busse (einer bei Zentrums-Distanz); nur aktiv wenn Netz keine Linie hat (Prototyp-Hack, TODO); verlässt sich auf den MapGenerator-Vertrag (erste 5 Road-Stops 0..4).
 - **`SetupVehicleVisualizer()`** — `private void` — VehicleVisualizer als Kind der CityView (sonst Main), Initialize(_transitNetwork).
+- **`SetupBuildingVisualizer()`** — `private void` (M6.6) — BuildingVisualizer als Kind der CityView (sonst this), Initialisierung mit `_cityGrowth.Growth` (CityGrowth-Kern, nur Lesen); kein Sim-Eingriff.
 - **`EconomySubsystem`** — `private sealed class : ISimulationSubsystem` — Adapter: EconomySystem.Tick() (ODF-4), deterministischer Zustands-Hash (Seed, TickCount, Budget, Schulden, Zinsen, Summen).
 - **`CitizenSubsystem`** — `private sealed class : ISimulationSubsystem` — Adapter: CitizenSystem.Tick(), Hash über alle Bewohner (aufsteigende IDs, Zustand + Zufriedenheit + Tagesplan).
 - **`TransitSubsystem`** — `private sealed class : ISimulationSubsystem` — Adapter: M6.5 treibt je Sim-Tick alle Fahrzeuge deterministisch via `VehicleMovementSystem.AdvanceVehicle(vehicle, line, deltaTicks: 1)` (M4-Kern, Fix32-exakt); Hash über Stops/Lines/Vehicles inkl. PositionAlongRoute, Passagiere, IsActive.
-- **`CityGrowthSubsystem`** — `private sealed class : ISimulationSubsystem` — Adapter: CityGrowthSystem.Tick(infra, network), Hash über Gebäude (Id/Typ/Position/Kapazität/Wohlstand).
+- **`CityGrowthSubsystem`** — `private sealed class : ISimulationSubsystem` — Adapter: CityGrowthSystem.Tick(infra, network), Hash über Gebäude (Id/Typ/Position/Kapazität/Wohlstand); M6.6: exponiert den Kern als `Growth` (nur Lesen, GetBuildings) für die Gebäude-Visualisierung.
+- **`Growth`** — `public CityGrowthSystem Growth => _growth` — M6.6: Zugriff auf den Wachstums-Kern (nur Lesen — GetBuildings); Tick-Logik unverändert.
 - **`CitizenTransitBridge`** — `private sealed class : ITransitNetwork` — Bridge Citizens ↔ Transit: IsLineAvailableAtStop über geordnete Listen (deterministisch).
 - **`HashState(Action<MemoryStream>)`** — `private static ulong` — FNV-1a 64 über deterministische Serialisierung.
 - **`WriteI32`/`WriteU32`/`WriteI64`/`WriteU64`/`WriteString`** — private Little-Endian-Schreibhelfer.
+
+### scripts/BuildingVisualizer.cs (M6.6, neu)
+- **`BuildingVisualizer`** — `public partial class BuildingVisualizer : Node3D` — Gebäude-Visualisierung (M6.6, GDD 4): rendert die CityGrowth-Gebäude als 3D-Quader (BoxMesh) unter einem Parent-Knoten; sim X/Y → Godot X/Z (Y nach oben, Konvention wie MapRenderer/VehicleVisualizer); Fix32→float ausschliesslich in der Render-Schicht (Sim bleibt Fix32-exakt); reines Lesen, kein Sim-Eingriff.
+- **Farb-Konstanten** — `ResidentialBaseColor (0.75,0.60,0.45)`, `CommercialBaseColor (0.60,0.55,0.50)`, `IndustrialBaseColor (0.45,0.40,0.38)`, `WindowBandColor (0.16,0.15,0.14)` — Warme Farbwelt (Art-Richtung C), public static readonly.
+- **Höhen-/Abmessungs-Konstanten** — Höhenbereiche (Residential 6–10, Commercial 12–20, Industrial 8–14 m), Grundflächen (8/12/14 m), Fensterband (Dicke 0.14, 55 % Höhe, 72 % Breite), `ColorVariantsPerType = 8`.
+- **`BuildingNodeCount`** — `public int BuildingNodeCount { get; private set; }` — Anzahl instanziierter Gebäude-Knoten (Headless-Nachweis).
+- **`Initialize(CityGrowthSystem)`** — `public void Initialize(CityGrowthSystem growth)` — Registriert den Wachstums-Kern (nur Lesen, ArgumentNullException-Guard), baut den Container einmalig auf, ruft Refresh().
+- **`Refresh()`** — `public void Refresh()` — M6.6-Hook (vom SimulationRunner nach jedem Sim-Tick): hängt NUR neue Gebäude inkrementell an (Gebäude unveränderlich, nie entfernt — Anzahl-Änderung = vollständiges Dirty-Signal; M6.6-Fix gegen O(n²) Voll-Rebuild bei ~100 Gebäuden/Tick; defensiver Voll-Rebuild bei Bestands-Schrumpfung); loggt X/Z-Min/Max (Kartenbereich ~1000,1000, headless prüfbar).
+- **`BuildBuildingNode(Building)`** — `private Node3D` — Erzeugt den Quader-Knoten (Body mit Unterkante y=0 + Fensterband auf der +X-Fassade), Name `Building_{Id}_{Type}`.
+- **`HeightFor(BuildingType, uint)`** — `private static float` — Höhe je Typ, deterministisch aus Hash (Bits 8..15 → [0,1]) gestreut.
+- **`FootprintFor(BuildingType)`** — `private static float` — Grundfläche je Typ (quadratisch).
+- **`BaseColorFor(BuildingType)`** — `private static Color` — Basis-Farbe je Typ (Art-Richtung C, warm).
+- **`MaterialFor(BuildingType, uint)`** — `private StandardMaterial3D` — Basis-Farbe × deterministische Variante (Faktor 0.90+0.025·Variante), gecacht pro (Typ, Variante) — keine Laufzeit-Allokation nach dem Warmup.
+- **`StableHash(int)`** — `private static uint` — 32-bit-FNV-1a über die Building-Id (Little-Endian, reine Integer-Arithmetik) — gleiche Id ⇒ gleicher Hash auf allen Plattformen, kein Zufall zur Laufzeit.
+- **`ToWorld(Position)`** — `private static Vector3` — Sim-Position (Fix32 x/y) → Godot-Welt (X/Z-Ebene, Y = 0).
+- **`MakeMaterial(Color)`** — `private static StandardMaterial3D` — Albedo + Roughness 0.92.
+
+### scripts/EnvironmentBuilder.cs (M6.6, neu)
+- **`EnvironmentBuilder`** — `public partial class EnvironmentBuilder : Node3D` — Sichtbare Umgebung für den Prototyp (M6.6, User-Feedback „nur Strassen-Kreuz auf leerem grauem Raum"): baut beim Start unter CityView Boden, Akzentflächen, WorldEnvironment (falls keins im Baum) und warme Sonne; deterministisch (feste Konstanten, kein Zufall), `Build()` idempotent, reines Rendering (Sim-Kern unberührt).
+- **Farb-Konstanten** — `GroundColor (0.55,0.45,0.35)`, `ParkColor (0.42,0.52,0.30)`, `WaterColor (0.35,0.50,0.60)`, `SkyTopColor (0.60,0.70,0.85)`, `SkyHorizonColor (0.90,0.85,0.75)`, `AmbientColor (0.95,0.90,0.82)`, `SunColor (1.00,0.96,0.90)` — public static readonly.
+- **Abmessungs-/Positions-Konstanten** — Boden 3000×3000×0.96 m zentriert (1000, -0.5, 1000) (Oberseite y = -0.02, kein Z-Fighting), Park 140×140 bei (1830, 0.005, 1830) (NO-Eck), Teich 220×160 bei (170, 0.005, 170) (SW-Eck), AmbientEnergy 0.6, SunEnergy 1.15.
+- **`_Ready()`** — `public override void _Ready()` — Ruft Build().
+- **`Build()`** — `public void Build()` — Idempotenter Aufbau: vorherigen Inhalt freigeben, Boden + Park + Wasser als Kind-Knoten, EnsureWorldEnvironment(), EnsureWarmSun(), Start-Log (Boden/Himmel/Ambient/Tonemap/Sonne).
+- **`MakeFlatBox(string, Vector3, Vector3, Color, float)`** — `private static MeshInstance3D` — Flache Box mit frischem Material (Albedo + Roughness).
+- **`EnsureWorldEnvironment()`** — `private void` — Legt WorldEnvironment nur an, falls im gesamten Baum KEINES existiert (bestehende unangetastet): ProceduralSky pastell, Ambient aus Farbe (0.6), Tonemap Filmic (Godot 4 kennt keinen „Basic"-Modus — dokumentierte Abweichung); Godot.Environment explizit qualifiziert (System.Environment-Mehrdeutigkeit).
+- **`EnsureWarmSun()`** — `private void` — Sonne warm justieren (Energie 1.15, warmweiss): bevorzugt „Sun" im CityView-Root (Parent), sonst erste DirectionalLight3D im Baum; fehlt eine, wird eine mit Kamerawinkel der CityView angelegt.
+- **`FindWorldEnvironment(Node)`** — `private static WorldEnvironment?` — Tiefensuche nach der ersten WorldEnvironment im Teilbaum.
+- **`FindDirectionalLight(Node?)`** — `private static DirectionalLight3D?` — Tiefensuche nach dem ersten DirectionalLight3D.
+- **`F(float)`** — `private static string` — Float invariant formatieren (F2, Locale-unabhängige Logs).
 
 ### scripts/CameraController.cs
 - **`CameraController`** — `public partial class CameraController : Camera3D` — M6.5-Orbit-Kamera (Prototyp): State-basiert (Fokus + Yaw/Pitch/Distanz), Transform jeden Frame via LookAt; keine UI-Texte (i18n-Gate), headless-sicher.
@@ -541,8 +572,9 @@ project: OpenMotion
 - **`MessageReceived`** — `public event Action<TransportMessage>?`.
 - **`Send(string, byte[])`/`Broadcast(IReadOnlyList<string>, byte[])`/`Receive(string, byte[])`** — Hub-Zustellung (synchron, geordnet).
 
-### src/OpenMotion.Core.Tests/MapTests.cs (M6, 10 Tests)
+### src/OpenMotion.Core.Tests/MapTests.cs (M6/M6.6, 11 Tests)
 - **`MapTests`** — xUnit: `Generate_SameSeed_ProducesIdenticalMap`, `Generate_DifferentSeeds_ProduceDifferentMaps`, `Generate_HasStartInfrastructure_AtLeastThreeRoadsAndOneStop` (Kreuz ≥ 3 Road, ≥ 1 Rail, Stops am Netz verankert, Koordinaten in [0,2000]), `Generate_UsesDefaultDimensions_2000x2000`, `Generate_InvalidDimensions_AreRejected`, `Serializer_Roundtrip_ProducesIdenticalMap`, `Serializer_SameMap_ProducesIdenticalBytes`, `Serializer_Roundtrip_WorksForMultipleSeeds` (0/1/42/20260809/MaxValue), `Serializer_RejectsUnknownFormatVersion`, `Serializer_RejectsCorruptInput` — alle grün.
+- **`Generate_HasDenseCityLayout_PrototypeDensity`** — `[Fact]` (M6.6, +1): Stadt-Quadranten-Dichte — > 5 Road-Segmente, Rail-Segmente in [2,3], StartStops in [12,20], ≥ 1 Path-Segment, jede Haltestelle am Netz verankert (GetSegmentsNear ≤ 0.5 m) — inkl. der neuen Block-/Rail-Stops.
 - **Test-Helfer** — `P(decimal, decimal)` (Fix32-Position), `AssertMapEqual(MapData, MapData)` (Seed/Dimensionen/Segmente/Stops vollständig), `Signature(MapData)` (kanonische Raw-Signatur).
 
 ### src/OpenMotion.Core.Tests/MultiplayerSessionTests.cs (M5, 12 Tests)

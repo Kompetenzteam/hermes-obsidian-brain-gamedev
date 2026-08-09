@@ -68,11 +68,13 @@ project: OpenMotion
 | OpenMotion.sln | Enthält OpenMotion, OpenMotion.Core, OpenMotion.Core.Tests |
 | project.godot | main_scene = scenes/Main.tscn; Assembly OpenMotion; Autoload: LocalizationManager + SteamManager; [input] 8 Kamera-Actions; i18n: de/en ui.po; GL Compatibility |
 | scenes/Main.tscn | ext_resource → scripts/SimulationRunner.cs |
-| scenes/city/CityView.tscn | ext_resource → scripts/MapRenderer.cs, scripts/CameraController.cs |
+| scenes/city/CityView.tscn | ext_resource → scripts/MapRenderer.cs, scripts/CameraController.cs, scripts/EnvironmentBuilder.cs (M6.6); Sun-Knoten deklarativ warm (light_energy 1.15, light_color) |
 | scenes/ui/HUD.tscn | ext_resource → scripts/HUD.cs |
 | scenes/vehicles/Bus.tscn / Tram.tscn / Metro.tscn | ext_resource → scenes/vehicles/VehicleColor.cs |
-| scripts/SimulationRunner.cs | Godot; OpenMotion.Core (.Map neu ab M6), .Citizens, .City, .Economy, .Lockstep, .Simulation, .Transit; : Node; implementiert ISimulationSubsystem (Adapter), ITransitNetwork (Bridge); instanziiert VehicleVisualizer, MapRenderer via CityView.tscn |
+| scripts/SimulationRunner.cs | Godot; OpenMotion.Core (.Map, .Citizens, .City, .Economy, .Lockstep, .Simulation, .Transit); : Node; implementiert ISimulationSubsystem (Adapter), ITransitNetwork (Bridge); M6.6: Referenzkarte aus MapGenerator.Generate (Wachstums-Infrastruktur + Rendering + Demo-Linie geteilt), instanziiert VehicleVisualizer + BuildingVisualizer (SetupBuildingVisualizer, `_cityGrowth.Growth`) via CityView.tscn |
+| scripts/BuildingVisualizer.cs | Godot; OpenMotion.Core.City (CityGrowthSystem, Building, BuildingType, Position); Fix32 (Position.ToDouble in ToWorld); : Node3D; Kind der CityView (vom SimulationRunner instanziiert) |
 | scripts/CameraController.cs | Godot; : Camera3D; Input-Actions aus project.godot [input] (camera_orbit/zoom/pan_*/height_*) |
+| scripts/EnvironmentBuilder.cs | Godot (Node3D, MeshInstance3D, BoxMesh, WorldEnvironment, ProceduralSkyMaterial, DirectionalLight3D, StandardMaterial3D); System.Globalization (CultureInfo.InvariantCulture); Knoten in scenes/city/CityView.tscn |
 | scripts/HUD.cs | Godot; LocalizationManager (LanguageChanged-Event); Tr() i18n |
 | scripts/LocalizationManager.cs | Godot (TranslationServer, ResourceLoader, Translation); i18n/de+en/LC_MESSAGES/ui.po |
 | scripts/MapRenderer.cs | Godot; OpenMotion.Core.City (Infrastructure, TransportSegment, Stop, Position, SegmentType); Fix32 (ToWorld) |
@@ -113,7 +115,7 @@ project: OpenMotion
 | export_presets.cfg | Godot-Export: Windows Desktop, x86_64, embed_pck; Icon res://assets/logo/logo_clean.png; Ziel build/openmotion_windows.exe |
 | docs/STEAMWORKS_SETUP_ANLEITUNG.md | Steamworks-Partnerkonto, App-ID, SDK, Spacewar-Testapp (Doku, keine Code-Abhängigkeit) |
 
-## Impact-Map (Stand 2026-08-09, nach M6.5)
+## Impact-Map (Stand 2026-08-09, nach M6.6)
 
 *Bei Änderungen an Kernmodulen sind folgende Dateien potenziell betroffen (aus den Abhängigkeiten abgeleitet):*
 
@@ -129,13 +131,17 @@ project: OpenMotion
 - **LineEconomicStatus.cs** → EconomySystem.ApplySubsidies, EconomySystemTests
 - **ISimSerializer / BinarySimSerializer** → ReplayExporter, SerializationTests
 - **Infrastructure.cs (City)** → CityGrowthSystem, MapData, MapGenerator, MapSerializer, MapRenderer (Render), SimulationRunner (Start-Setup), CityGrowthTests, MapTests
-- **MapData.cs / MapGenerator.cs / MapSerializer.cs** → SimulationRunner (SetupCityView, _referenceMap, ReferenceMapSeed), MapRenderer (Infrastructure-Konsum), MapTests; MapSerializer unabhängig von Godot
+- **MapData.cs / MapGenerator.cs / MapSerializer.cs** → SimulationRunner (SetupCityView, _referenceMap, ReferenceMapSeed, Demo-Linie), MapRenderer (Infrastructure-Konsum), BuildingVisualizer (Wachstums-Infrastruktur), MapTests (M6.6: Dichte-Test-Erwartungen), CHANGELOG; MapSerializer unabhängig von Godot. **M6.6-Folge:** längere Demo-Route (1737,8 m statt 1297,4 m) ändert Transit-Hashes — Determinismus bleibt bit-identisch, Baselines verschieben sich (dokumentiert im CHANGELOG)
+- **CityGrowthSystem.cs** → BuildingVisualizer (GetBuildings, nur Lesen), SimulationRunner (CityGrowthSubsystem.Growth-Exposé, M6.6), CityGrowthTests, SimulationIntegrationTests
 - **ITransport.cs** → InMemoryTransport, P2PSession, NetworkingTransportAdapter, NetworkingTests, NetworkingIntegrationTests; später SteamTransport (Parallel-Agent)
 - **InMemoryTransport.cs / TransportWire** → P2PSession, NetworkingTests, NetworkingIntegrationTests (Test-Stacks)
 - **Netcode.cs** → P2PSession, NetworkingTests; Drahtformat-Änderung bricht alle Peers (NDD §4.3)
 - **IMultiplayerTransport.cs** → MultiplayerSession, NetworkingTransportAdapter, Tests-InMemoryTransport (Test-Double)
 - **MultiplayerSession.cs / MultiplayerWire.cs / SessionConfig.cs** → MultiplayerSessionTests, NetworkingIntegrationTests; MultiplayerWire-Format einmal vergeben, nie ändern (NDD §4.4)
-- **MapRenderer.cs / CityView.tscn** → SimulationRunner (SetupCityView); CHANGELOG
+- **MapRenderer.cs / CityView.tscn** → SimulationRunner (SetupCityView); EnvironmentBuilder (Knoten in CityView, Sun-Justierung); CHANGELOG
+- **BuildingVisualizer.cs** (M6.6, neu) → SimulationRunner (SetupBuildingVisualizer, M6.6-Hook in _PhysicsProcess, _ExitTree-Bericht), CityGrowthSystem (GetBuildings, nur Lesen), CityView.tscn (Parent-Knoten), CHANGELOG
+- **EnvironmentBuilder.cs** (M6.6, neu) → CityView.tscn (Knoten + Skript-Bindung, load_steps 4), Sun-Knoten der CityView (warme Voreinstellung + Laufzeit-Justierung), CHANGELOG
+- **MapTests.cs** (M6.6, +1) → MapGenerator-Erwartungen (Stadt-Quadranten-Dichte, 12–20 Stops); Test-Anpassungen nötig, falls der Generator die Geometrie-Verträge ändert
 - **CameraController.cs** → CityView.tscn (Skript-Bindung); project.godot [input] (Actions)
 - **LocalizationManager.cs** → HUD.cs (LanguageChanged), project.godot (Autoload); i18n/de+en/ui.po
 - **SteamManager.cs** → OpenMotion.csproj (Steamworks.NET), libs/win-x64/steam_api64.dll, project.godot (Autoload)
@@ -159,7 +165,7 @@ project: OpenMotion
 | **Bewohner (M3)** | Citizen.cs, CitizenSystem.cs, RoutingPreference.cs | SIM-Agenten (10k+ Ziel), deterministische Tagespläne, Fahrgast-Wahlmodell (ODF-3), Integrations-Naht ITransitNetwork |
 | **Transit (M3/M4)** | TransitNetwork.cs, Line.cs, Stop.cs, Vehicle.cs, VehicleType.cs, TransitMath.cs, PassengerFlow.cs, VehicleMovementSystem.cs | Netz-Datenmodell mit deterministischen IDs, Linien/Fahrzeuge, Fahrgast-Wechsel, Bewegung entlang der Route |
 | **Stadt (M3)** | Infrastructure.cs, Building.cs, CityGrowthSystem.cs | Gebaute Infrastruktur (Segmente/Haltestellen), automatisches Wachstum entlang der Wege (GDD 4) |
-| **Godot-Integration (M4→M6.5)** | scripts/SimulationRunner.cs, CameraController.cs, MapRenderer.cs, VehicleVisualizer.cs, scenes/*.tscn, VehicleColor.cs | 30-Hz-Tick-Akkumulator, deterministische Subsystem-Adapter, Referenzkarten-Rendering, Orbit-Kamera, Fahrzeug-Visualisierung, prozedurale Fahrzeugmodelle |
+| **Godot-Integration (M4→M6.6)** | scripts/SimulationRunner.cs, CameraController.cs, MapRenderer.cs, VehicleVisualizer.cs, BuildingVisualizer.cs, EnvironmentBuilder.cs, scenes/*.tscn, VehicleColor.cs | 30-Hz-Tick-Akkumulator, deterministische Subsystem-Adapter, Referenzkarten-Rendering, Orbit-Kamera, Fahrzeug-Visualisierung, Gebäude-Visualisierung (M6.6), Umgebung (Boden/Himmel/Sonne, M6.6), prozedurale Fahrzeugmodelle |
 | **i18n (M6)** | scripts/LocalizationManager.cs, scripts/HUD.cs, scenes/ui/HUD.tscn, i18n/de|en/LC_MESSAGES/ui.po | DE = Spielsprache (ADR-004), EN zweite Sprache, LanguageChanged-Event, Paritäts-Gate |
 | **Steamworks (M5)** | scripts/SteamManager.cs, OpenMotion.csproj (Steamworks.NET), libs/win-x64/steam_api64.dll, docs/STEAMWORKS_SETUP_ANLEITUNG.md | SteamAPI-Init/Shutdown (App-ID 480), crash-sicher, headless-CI-tauglich; Sim-Kern bleibt Steam-frei |
 | **Tests** | src/OpenMotion.Core.Tests/*.cs (16 Suiten inkl. M5/M6-Neu) | xUnit: Determinismus-, Roundtrip-, Netz- und Validierungsabdeckung (ADR-004/006); CI auf Windows+Linux |
