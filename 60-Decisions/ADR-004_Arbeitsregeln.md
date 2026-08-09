@@ -48,6 +48,7 @@ Glieder übernimmt die Rolle des Koordinators über parallele Agents und definie
 - **Freigabe-Pflicht (2026-08-09):** Nach dem Projekt-Ausfragen werden ZUERST **Gesamtkonzept** + **Projektplan** vorgelegt und vom User manuell freigegeben. Designentscheidungen (Art-Konzept, Logo, UI, Tech-Stack, Architektur) werden einzeln zur manuellen Freigabe vorgelegt. Nichts wird autonom umgesetzt — Freigabe ist harte Voraussetzung für den Arbeitsstart.
 - **Koordinator-Regel (2026-08-09):** Hermes arbeitet NIE selbst an Aufgaben — ALLE Aufgaben werden an Agents/Subagents delegiert. Hermes ist nur Koordinator: vergibt Arbeit, koordiniert, fragt Status ab, meldet alle 10 Minuten Status-Report an Glieder. Entscheidet immer im Sinne des Projekts.
 - **Agent-Parallelität (2026-08-09):** Bis zu **9 parallele Agents/Subagents** dürfen eingesetzt werden (User-Regel). `delegation.max_concurrent_children=9` ist in der Hermes-Konfiguration gesetzt (verifiziert). Koordinator nutzt volle Parallelität für Wellen.
+- **Brain-Sync-Regel (2026-08-09):** Nach JEDER Änderung an Dateien (Projektcode, Assets, Doku) muss IMMER auch das Obsidian-Brain aktualisiert werden — Session-Log (50-Sessions), Backlog/README-Status (10-Projects), ADRs (60-Decisions), Verlinkungen. Das Brain spiegelt permanent den aktuellen Stand; nie nur Code/Repo updaten.
 
 ### 🔐 Security-Regeln
 - **Niemals Credentials im Klartext im Code** (harte Regel, 2026-08-09)
