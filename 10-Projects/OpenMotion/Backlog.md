@@ -22,6 +22,7 @@ status: active
 - [x] M4 Vehicles ✅ — VehicleMovementSystem (deterministische Bewegung, Stop-Ankünfte, Fahrgast-Wechsel), Godot-Modelle (Bus/Tram/Metro .tscn), SimulationRunner (30 Hz in Godot, Hash 0x407B0763D2ABA9CB bei Tick 300) — **173 Tests grün**
 - [x] M5 Steam MP ✅ — Steamworks.NET (App-ID 480, SteamManager, kein Crash ohne Steam), Netz-Transport (ITransport/InMemoryTransport deterministisch/P2PSession/Netcode), MultiplayerSession (Host-Ordnungsgeber, Seed-Verteilung, Desync-Erkennung via Tick-Hash) — **206 Tests grün**; Steamworks-Setup-Anleitung in `docs/STEAMWORKS_SETUP_ANLEITUNG.md`
 - [x] M6 City/UI ✅ — MapGenerator (deterministische Referenzkarte 2000×2000, Seed, Kreuz+2 Schienen+8 Stops), MapSerializer (formatVersion 1), MapRenderer (Godot-3D: Straßen/Schienen/Gehwege/Stops), CityView.tscn, i18n-Integration (LocalizationManager DE/EN, HUD.tscn, Locale=de default) — **216 Tests grün**
+- [x] **M6.5 Spielbarer Prototyp ✅** — CameraController (Orbit/Zoom/Pan, 8 Input-Actions), VehicleVisualizer (Demo-Linie, 2 Busse, Linienfarben), Windows-Export `build/openmotion_windows.exe` (106 MB, .NET 8 Runtime vorhanden) — **216 Tests grün**; `build/` ist NICHT im Repo (GitHub 100-MB-Limit, .gitignore, History bereinigt)
 - [ ] P0 Kern-Wirtschaftssimulation (Budget, Passagierströme, Tarife) — integriert, UI-Anbindung offen
 - [ ] P0 Linienplanung (Haltestellen, Routen, Fahrpläne) — Kern fertig, UI offen
 - [ ] P0 Verkehrsmittel: Bus / Tram / U-Bahn — Datenmodell fertig, Rendering offen (M4)

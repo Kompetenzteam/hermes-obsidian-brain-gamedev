@@ -35,7 +35,7 @@ repo: D:\Entwicklung\Projekte\OpenMotion
 - [ ] i18n DE/EN (hartes Gate, ADR-004)
 
 ## Abhängigkeiten
-- Steamworks SDK (kostenlos, Partnerkonto nötig)
+- Steamworks SDK (kostenlos, Partnerkonto nötig) — **abgelegt unter `C:\Steamworks\sdk`** (2026-08-09, nicht im Repo)
 - Steam Direct 100 $ (vor Release, Freigabe nötig)
 
 ## Offene Tasks
