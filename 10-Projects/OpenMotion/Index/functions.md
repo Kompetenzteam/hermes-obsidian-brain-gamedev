@@ -139,6 +139,239 @@ project: OpenMotion
 - **`Compare(Func<SimulationOrchestrator>, uint)`** — `public ComparisonResult Compare(Func<SimulationOrchestrator> orchestratorFactory, uint ticks)` — Zwei frische Orchestratoren aus einer Fabrik vergleichen.
 - **`Compare(SimulationOrchestrator, SimulationOrchestrator, uint)`** — `public ComparisonResult Compare(...)` — Vergleich zweier Läufe (müssen bei Tick 0 starten, unabhängige Subsysteme).
 
+### src/OpenMotion.Core/Map/MapData.cs
+- **`MapData`** — `public sealed class MapData(ulong seed, Fix32 width, Fix32 height, Infrastructure infrastructure)` — Deterministische Start-Referenzkarte (M6): Container für Seed, Welt-Dimensionen (Fix32) und Start-Infrastruktur; nur von MapGenerator erzeugt; Validierung width/height > 0.
+- **`Seed`** — `public ulong Seed { get; }` — Master-Seed der Karte (NDD §8.2) — gleicher Seed ⇒ identische Karte.
+- **`Width`** — `public Fix32 Width { get; }` — Weltbreite in Metern (Standard 2000).
+- **`Height`** — `public Fix32 Height { get; }` — Welthöhe in Metern (Standard 2000).
+- **`Infrastructure`** — `public Infrastructure Infrastructure { get; }` — Start-Infrastruktur: Segmente + verankerte Haltestellen (GDD 3).
+- **`StartStops`** — `public IReadOnlyList<Stop> StartStops => Infrastructure.Stops` — Start-Haltestellen (eine Quelle, keine Duplikate).
+- **`RoadSegmentCount`** — `public int RoadSegmentCount` — Anzahl Strassen-Segmente (Wachstums-Grundlage, GDD 4).
+- **`RailSegmentCount`** — `public int RailSegmentCount` — Anzahl Schienen-Segmente (Tram/U-Bahn, GDD 3.1).
+
+### src/OpenMotion.Core/Map/MapGenerator.cs
+- **`MapGenerator`** — `public static class MapGenerator` — Deterministischer Referenzkarten-Generator (M6): Seed → Straßen-Kreuz (4 Segmente) + 2 Schienen-Segmente (Ost-West-Korridor + Verbindungs-Spur) + 8 Start-Haltestellen; reine Fix32-Arithmetik (NDD §3.1/§3.3).
+- **`DefaultWidth`** — `public const int DefaultWidth = 2000` — Standard-Weltbreite.
+- **`DefaultHeight`** — `public const int DefaultHeight = 2000` — Standard-Welthöhe.
+- **`Generate(ulong)`** — `public static MapData Generate(ulong seed)` — Referenzkarte mit Standard-Dimensionen 2000×2000.
+- **`Generate(ulong, Fix32, Fix32)`** — `public static MapData Generate(ulong seed, Fix32 width, Fix32 height)` — Karte mit expliziten Dimensionen; seed-abhängige Geometrie (Kreuz-Armlänge 250–500, Korridor-Offset 120–240, Korridor-Länge 350–500) via DeterministicRandom.
+
+### src/OpenMotion.Core/Map/MapSerializer.cs
+- **`MapSerializer`** — `public sealed class MapSerializer` — Deterministische MapData-Serialisierung (M6, NDD §3.5): eigene feste JSON-Kodierung (Utf8JsonWriter/JsonDocument), Fix32 als Raw-long, Format-Version 1.
+- **`FormatVersion`** — `public const int FormatVersion = 1` — Aktuelle Format-Version (beim Import hart geprüft).
+- **`Serialize(MapData)`** — `public byte[] Serialize(MapData map)` — Deterministische Bytes (gleiche Karte ⇒ identische Bytes; Segment-/Stop-IDs, Typen, Fix32-Raw, Seed).
+- **`Deserialize(byte[])`** — `public MapData Deserialize(byte[] bytes)` — Striktes Wiederherstellen: Format-Version, Dimensionen > 0, Enum-Validierung, ID-Verifikation gegen neu vergebene IDs (korrupte Daten → InvalidDataException).
+- **`ReadSegments(JsonElement, Infrastructure)`** — `private static void` — Segmente einlesen (AddRoadSegment/AddRailSegment/AddPath) + ID-Abgleich.
+- **`ReadStops(JsonElement, Infrastructure)`** — `private static void` — Haltestellen einlesen + ID-Abgleich.
+- **`GetRequiredProperty`/`GetRequiredArray`/`GetRequiredInt32`/`GetRequiredInt64`/`GetRequiredUInt64`** — `private static …` — Strikte JSON-Feld-Reader (Pflichtfelder, Typ-Validierung, InvalidDataException).
+
+### src/OpenMotion.Core/Networking/ITransport.cs
+- **`ITransport`** — `public interface ITransport` — Abstrakter Netz-Transport (M5, NDD §4): Steam-frei und testbar; Peer-IDs 64-bit (SteamID-kompatibel, NDD §4.2).
+- **`LocalPeerId`** — `ulong LocalPeerId { get; }` — Eigene, eindeutige Peer-ID.
+- **`PeerConnected`** — `event Action<ulong>?` — Feuert bei neu verbundenem Peer (Lobby-Join, P2P-Handshake).
+- **`PeerDisconnected`** — `event Action<ulong>?` — Feuert bei Verbindungsverlust (Timeout, Leave, Steam-Disconnect).
+- **`Send(ulong, byte[], bool)`** — `void Send(ulong peerId, byte[] payload, bool reliable)` — Senden; Sim-relevante Nachrichten immer reliable (NDD §4.3).
+- **`Receive(out ulong, out byte[])`** — `bool Receive(out ulong peerId, out byte[] payload)` — Nächste eingegangene Nachricht (FIFO), false wenn leer.
+
+### src/OpenMotion.Core/Networking/InMemoryTransport.cs
+- **`InMemoryTransport`** — `public sealed class InMemoryTransport : ITransport` — Fake-Transport für deterministische Tests (M5, NDD §11.2): tick-basierte Latenz/Jitter statt Wanduhrzeit.
+- **`LocalPeerId`** — `public ulong LocalPeerId { get; }` — Eigene Peer-ID (eindeutig innerhalb einer TransportWire).
+- **`LatencyTicks`** — `public uint LatencyTicks { get; }` — Feste Latenz in Ticks (empfangbar nach so vielen AdvanceTick-Schritten des Ziels).
+- **`MaxJitterTicks`** — `public uint MaxJitterTicks { get; }` — Maximaler Jitter in Ticks (deterministisch aus fest geseedetem RNG).
+- **`Tick`** — `public uint Tick { get; private set; }` — Tick-Zähler des Peers (steigt nur via AdvanceTick).
+- **`PendingReceiveCount`** — `public int PendingReceiveCount` — Anzahl zugestellter, noch nicht abgeholter Nachrichten.
+- **`PeerConnected`/`PeerDisconnected`** — `public event Action<ulong>?` — Verbindungs-Events.
+- **`Send(ulong, byte[], bool)`** — `public void Send(...)` — Sendet über die Wire; Latenz 0 ⇒ sofort, sonst nach LatencyTicks + deterministischem Jitter; unbekannte Ziele → InvalidOperationException.
+- **`Receive(out ulong, out byte[])`** — `public bool Receive(...)` — FIFO-Entnahme.
+- **`AdvanceTick()`** — `public void AdvanceTick()` — Simulierte Zeit +1 Tick, stellt fällige Nachrichten zu (deterministisch, NDD §3).
+- **`OnPeerConnected`/`OnPeerDisconnected`/`EnqueueIncoming`** — `internal` — Wire-Kollaboration (Events/Interne Zustellung).
+- **`TransportWire`** — `public sealed class TransportWire` — Verbindungs-Hub: verwaltet Teilnehmer + Latenz-Queue pro Ziel; Attach feuert PeerConnected beidseitig.
+- **`TransportCount`** — `public int TransportCount` — Anzahl verbundener Transports.
+- **`CreateTransport(ulong, uint, uint, int)`** — `public InMemoryTransport CreateTransport(...)` — Erzeugt + verbindet einen Fake-Transport (PeerConnected beidseitig).
+- **`Remove(InMemoryTransport)`** — `public void Remove(...)` — Trennt Transport; PeerDisconnected beidseitig; offene Nachrichten verworfen (NDD §10).
+- **`CreatePair(ulong, ulong, uint, uint, int)`** — `public static (InMemoryTransport A, InMemoryTransport B) CreatePair(...)` — Bequemlichkeit für Zwei-Peer-Tests.
+- **`Route(InMemoryTransport, ulong, byte[], uint)`** — `internal void Route(...)` — Weiterleitung (sofort oder Latenz-Queue mit DueTick relativ zum Ziel-Tick).
+- **`DeliverDue(InMemoryTransport)`** — `internal void DeliverDue(...)` — Stellt fällige Nachrichten zu (FIFO, Sendereihenfolge stabil).
+
+### src/OpenMotion.Core/Networking/Netcode.cs
+- **`NetMessageType`** — `public enum NetMessageType : byte` — Nachrichtentypen des Drahtformats (NDD §4.3): InputFrame = 0, DesyncReport = 1; ControlFrame = 2 reserviert (Session-Logik).
+- **`DesyncReport`** — `public readonly record struct DesyncReport(uint Tick, ulong ExpectedHash, ulong ReportedHash)` — Desync-Meldung (NDD §5.2), 20 Bytes fest: [Tick:4][ExpectedHash:8][ReportedHash:8].
+- **`SerializedSize`** — `public const int SerializedSize = 20` — Feste serielle Größe.
+- **`ToByteArray()`/`WriteTo(Span<byte>)`/`FromBytes(ReadOnlySpan<byte>)`** — Binäre Little-Endian-Serialisierung (zu kurz → InvalidDataException).
+- **`Netcode`** — `public static class Netcode` — Deterministische Draht-Kodierung (NDD §3.5/§4.3): Framing [Length:4 LE][Type:1][Body], 1-MB-Limit.
+- **`ProtocolVersion`** — `public const uint ProtocolVersion = 1` — Protokollversion.
+- **`MaxMessageLength`** — `public const int MaxMessageLength = 1024 * 1024` — Steam-Limit (NDD §4.3).
+- **`LengthPrefixSize`** — `public const int LengthPrefixSize = 4`.
+- **`Frame(NetMessageType, ReadOnlySpan<byte>)`** — `public static byte[] Frame(...)` — Rahmt ein (Length = Type + Body).
+- **`Unframe(ReadOnlySpan<byte>)`** — `public static (NetMessageType Type, byte[] Body) Unframe(...)` — Striktes Entrahmen: Länge konsistent, 1-MB-Limit, bekannter Typ (Korruption → InvalidDataException).
+- **`EncodeInputFrame(InputFrame)`/`DecodeInputFrame(ReadOnlySpan<byte>)`** — InputFrame ↔ gerahmte Draht-Nachricht (Typ strikt geprüft).
+- **`EncodeDesyncReport(DesyncReport)`/`DecodeDesyncReport(ReadOnlySpan<byte>)`** — DesyncReport ↔ Draht-Nachricht.
+
+### src/OpenMotion.Core/Networking/P2PSession.cs
+- **`P2PSession`** — `public sealed class P2PSession(ulong localPeerId, ITransport transport)` — Logische P2P-Session (M5, NDD §4): Transport + Frame-Verteilung, KEINE Lockstep-Kapselung; Teilnehmerliste via PeerConnected/Disconnected + AddPeer/RemovePeer.
+- **`LocalPeerId`** — `public ulong LocalPeerId { get; }` — Eigene Peer-ID (SteamID im Steam-Fall).
+- **`Peers`** — `public IReadOnlyCollection<ulong> Peers` — Fremde Teilnehmer (ohne lokale ID).
+- **`InputFrameReceived`** — `public event Action<InputFrame>?` — Für jeden empfangenen InputFrame.
+- **`DesyncReportReceived`** — `public event Action<DesyncReport>?` — Für jeden empfangenen Desync-Report (NDD §5.2).
+- **`AddPeer(ulong)`/`RemovePeer(ulong)`** — Teilnehmerliste explizit steuern (eigene ID nie Teilnehmer).
+- **`SendInputFrame(InputFrame, ulong)`** — `public void SendInputFrame(...)` — Gezielter reliable Send (Nicht-Teilnehmer → ArgumentException).
+- **`BroadcastInputFrame(InputFrame)`** — `public void BroadcastInputFrame(...)` — An alle Teilnehmer reliable; lokaler Frame bleibt lokal.
+- **`SendDesyncReport(DesyncReport, ulong)`** — `public void SendDesyncReport(...)` — Reliable (NDD §5.2).
+- **`Poll()`** — `public void Poll()` — Drainiert den Transport (einmal pro Tick, NDD §2.1), dekodiert strikt (Netcode), verteilt Events; korrupte Pakete → InvalidDataException (Fuzzing-Vertrag NDD §11.2).
+- **`OnPeerConnected`/`OnPeerDisconnected`** — `private void` — Automatische Teilnehmerliste.
+
+### src/OpenMotion.Core/Multiplayer/IMultiplayerTransport.cs
+- **`TransportMessage`** — `public readonly record struct TransportMessage(string SenderPeerId, byte[] Payload)` — Zugestellte Nachricht (Absender + rohe Payload).
+- **`IMultiplayerTransport`** — `public interface IMultiplayerTransport` — Transport-Abstraktion der Session (M5): reliable/ordered-Semantik (NDD §4.5); Session hängt NUR an diesem Interface (Dependency Injection).
+- **`PeerId`** — `string PeerId { get; }` — Stabile Peer-ID (im MVP z. B. SteamID als String).
+- **`Send(string, byte[])`** — `void Send(string targetPeerId, byte[] payload)` — Reliable/ordered an einen Peer.
+- **`Broadcast(IReadOnlyList<string>, byte[])`** — `void Broadcast(IReadOnlyList<string> targetPeerIds, byte[] payload)` — An alle angegebenen Peers.
+- **`MessageReceived`** — `event Action<TransportMessage>?` — Für jede eingehende Nachricht.
+
+### src/OpenMotion.Core/Multiplayer/SessionConfig.cs
+- **`SessionConfig`** — `public sealed class SessionConfig(int seed, int playerCount, int tickRate = SimContext.SimTickRate)` — Session-Konfiguration (M5, NDD §8/§2.1): Master-Seed, Spielerzahl, Tick-Rate.
+- **`MinPlayers`** — `public const int MinPlayers = 2` — Minimale Spielerzahl inkl. Host (NDD §7.1).
+- **`MaxPlayers`** — `public const int MaxPlayers = 8` — Lobby-Limit (NDD §7.1).
+- **`Seed`** — `public int Seed { get; }` — Master-Seed (vom Host verteilt, NDD §8.2).
+- **`PlayerCount`** — `public int PlayerCount { get; }` — Spieler inkl. Host (2–8, validiert).
+- **`TickRate`** — `public int TickRate { get; }` — 30 Ticks/s als Build-Zeit-Konstante (zur Laufzeit nicht änderbar, validiert).
+
+### src/OpenMotion.Core/Multiplayer/MultiplayerWire.cs
+- **`WireMessage`** — `internal readonly record struct WireMessage(byte Type, uint Tick, byte PlayerId, byte[] Payload)` — Decodierte Nachricht.
+- **`MultiplayerWire`** — `internal static class MultiplayerWire` — Binäre Nachrichten-Codierung der Session-Schicht (NDD §4.4): Umschlag [Type:1][Tick:4][PlayerId:1][Len:4][Payload], Little-Endian.
+- **MessageType-Konstanten** — `MsgJoin = 1`, `MsgWelcome = 2`, `MsgInput = 3`, `MsgTickInput = 4`, `MsgHashReport = 5` — Drahtformat-Werte (einmal vergeben, nie ändern, NDD §4.4).
+- **`Encode(byte, uint, byte, ReadOnlySpan<byte>)`** — `public static byte[] Encode(...)` — Gemeinsamer Umschlag.
+- **`Decode(byte[])`** — `public static WireMessage Decode(byte[] data)` — Decodierung; korrupte Pakete → InvalidDataException.
+- **`EncodeJoin()`** — Join-Nachricht (leerer Payload).
+- **`EncodeWelcome(int, byte, byte)`/`DecodeWelcome(byte[], out int, out byte, out byte)`** — Seed-Verteilung [Seed:4][PlayerId:1][PlayerCount:1].
+- **`EncodeInput(InputFrame)`** — Client → Host: eigener InputFrame.
+- **`EncodeTickInput(uint, IReadOnlyList<InputFrame>)`/`DecodeTickInput(byte[])`** — Konsolidierte Tick-Eingabe [FrameCount:1] + Frames (Anzahl 1..MaxPlayers validiert).
+- **`EncodeHashReport(uint, ulong)`/`DecodeHash(byte[])`** — HashReport-Payload (8 Bytes).
+
+### src/OpenMotion.Core/Multiplayer/NetworkingTransportAdapter.cs
+- **`NetworkingTransportAdapter`** — `public sealed class NetworkingTransportAdapter : IMultiplayerTransport` — Integrations-Adapter (M5): implementiert IMultiplayerTransport über pull-basiertes ITransport (OpenMotion.Core.Networking); immer reliable (NDD §4.3).
+- **`PeerId`** — `public string PeerId { get; }` — Lokale Peer-ID als Invariant-Culture-String.
+- **`MessageReceived`** — `public event Action<TransportMessage>?` — Push-Event (aus Pump).
+- **`Send(string, byte[])`** — `public void Send(...)` — _transport.Send(peerId, payload, reliable: true).
+- **`Broadcast(IReadOnlyList<string>, byte[])`** — `public void Broadcast(...)` — Send je Ziel, reliable.
+- **`Pump()`** — `public void Pump()` — Drainiert die Empfangs-Queue (einmal pro Tick aufzurufen, NDD §2.1) → MessageReceived-Events.
+- **`ParsePeerId(string)`** — `private static ulong ParsePeerId(...)` — ulong-Parsing (invariant; ungültig → ArgumentException).
+
+### src/OpenMotion.Core/Multiplayer/MultiplayerSession.cs
+- **`MultiplayerSessionState`** — `public enum MultiplayerSessionState { Idle, WaitingForPlayers, Connecting, Running }` — Lebenszyklus-Zustände (NDD §8.1 Lobby-Phasen).
+- **`DesyncEvent`** — `public readonly record struct DesyncEvent(uint Tick, string PeerId, ulong ExpectedHash, ulong ActualHash)` — Desync-Ereignis (NDD §5.2/§5.3); deterministisch, keine Echtzeit-Felder.
+- **`MultiplayerSession`** — `public sealed class MultiplayerSession(SessionConfig config, IMultiplayerTransport transport, Func<int, LockstepSession>? lockstepFactory = null)` — M5-Session in Star-Topologie: Host = Ordnungsgeber + Session-Verwaltung, KEINE Simulations-Autorität; transport-agnostisch.
+- **`Config`/`Transport`/`IsHost`/`State`/`HostPeerId`** — Zugriffs-Eigenschaften (Lebenszyklus, NDD §8.1).
+- **`LocalPlayerId`** — `public byte LocalPlayerId` — Deterministische PlayerId (Host = 0, Clients 1..n-1, NDD §7.1).
+- **`Lockstep`** — `public LockstepSession? Lockstep` — Lockstep-Kern (Host ab StartSession, Client nach Welcome).
+- **`TickRate`** — `public int TickRate` — 30/s (NDD §2.1).
+- **`Peers`** — `public IReadOnlyList<string> Peers` — Beigetretene Client-PeerIds (Host-Sicht).
+- **`VerifiedHashReports`** — `public int VerifiedHashReports` — Anzahl verifizierter (übereinstimmender) HashReports (NDD §5.2).
+- **`DesyncDetected`** — `public event Action<DesyncEvent>?` — Bei jedem erkannten Desync.
+- **`StartSession(bool host)`** — `public void StartSession(...)` — Host: Seed bestimmen, PlayerId 0, WaitingForPlayers; Client: Connecting.
+- **`JoinSession(string peerId)`** — `public void JoinSession(...)` — Host: Client beitreten lassen; Client: Join-Nachricht senden.
+- **`SubmitInput(InputFrame)`** — `public void SubmitInput(...)` — Lokale Eingabe einreichen (Host: puffern; Client: an Host senden); PlayerId muss lokal sein.
+- **`OnFrameReceived(InputFrame)`** — `public void OnFrameReceived(...)` — Host: Client-Frame puffern; Client: konsolidierten Broadcast in den Lockstep + Barriere.
+- **`GetDesyncEvents()`** — `public IReadOnlyList<DesyncEvent> GetDesyncEvents()` — Debug-/Analyse-Eintrag (NDD §5.2/§5.3).
+- **`JoinClient(string)`** — `private void` — Späte Joins/Duplikate ignorieren; bei voller Liste Seed-Verteilung.
+- **`DistributeSeeds()`** — `private void` — Sitzordnung: sortierte Peer-IDs → PlayerId 1..n-1; Welcome an alle; State = Running.
+- **`BufferHostFrame(InputFrame)`** — `private void` — Puffert Host-Frames; Duplikate/zu späte Ticks verworfen (NDD §9.2); Tick-Barriere: konsolidiere sobald alle Spieler-Frames des nächsten Ticks da sind (NDD §2.3).
+- **`ConsolidateTick(uint, List<InputFrame>)`** — `private void` — Deterministische Sortierung (PlayerId → FrameSeq → Tick), Host verarbeitet Tick zuerst, Broadcast der geordneten Tick-Eingabe (NDD §2.2).
+- **`CompareFrames(InputFrame, InputFrame)`** — `private static int` — Deterministische Frame-Ordnung.
+- **`HandleHashReport(string, uint, byte[])`** — `private void` — Nur Session-Mitglieder, Tick muss verarbeitet sein; Abweichung → DesyncEvent + Event (NDD §5.2).
+- **`HandleWelcome(string, byte[])`** — `private void` — Nur im Connecting-Zustand + vom gebundenen Host; PlayerCount-Abgleich (Handshake NDD §4.3); Lockstep aus Fabrik.
+- **`HandleTickInput(uint, byte[])`** — `private void` — Vollständige Tick-Eingabe (FrameCount == PlayerCount) → OnFrameReceived je Frame.
+- **`TryAdvanceClient()`** — `private void` — Client-Barriere: AdvanceTick sobald alle Spieler-Frames des Ticks gepuffert (NDD §2.3).
+- **`SendHashReportIfDue()`** — `private void` — Alle 10 Ticks Ganzzustands-Hash an Host (NDD §5.2).
+- **`OnTransportMessage(TransportMessage)`** — `private void` — Dispatch nach Typ; korrupte Pakete sauber verworfen (Netz-Fuzzing NDD §11.4); Absender-Mapping geprüft (NDD §9.3).
+
+### scripts/SimulationRunner.cs
+- **`SimulationRunner`** — `public partial class SimulationRunner : Node` — Godot-Seite der Gesamtsimulation (M4→M6.5): bindet SimulationOrchestrator in die Engine-Tick-Schleife; M6: CityView/Referenzkarte; M6.5: Demo-Linie + Fahrzeug-Visualisierung.
+- **Konstanten** — `MasterSeed = 20260809`, `DebugReportIntervalTicks = 300`, `MaxCatchUpSeconds = 0.25`, `ReferenceMapSeed = 20260809`.
+- **`_Ready()`** — `public override void _Ready()` — Start-Setup: Infrastruktur (1 Strasse + 2 Stops), Transit-Netz (2 Stops), 120 Bewohner, Subsysteme in kanonischer Reihenfolge, Orchestrator; danach M6: `MapGenerator.Generate(ReferenceMapSeed)` + `SetupCityView()`; M6.5: `SetupDemoTransitLine()` + `SetupVehicleVisualizer()`.
+- **`_PhysicsProcess(double)`** — `public override void _PhysicsProcess(double delta)` — Tick-Akkumulator: feste 30-Hz-Sim-Ticks (framerate-unabhängig, Spiral-of-Death-Schutz), nach jedem Sim-Tick `_vehicleVisualizer?.Refresh()` (M6.5-Hook), Hash-Report alle 300 Ticks.
+- **`_ExitTree()`** — `public override void _ExitTree()` — Abschlussbericht (Ticks, Hash-Berichte, Fahrzeug-Knoten + PositionAlongRoute je Fahrzeug).
+- **`SetupCityView()`** — `private void` — Lädt CityView.tscn, instanziiert als Kind von Main, bestückt MapRenderer mit `_referenceMap.Infrastructure`, loggt Segment-/Stop-Zählung.
+- **`SetupDemoTransitLine()`** — `private void` — M6.5-Demo: Bus-Linie „Demo-Linie 1" (West→Zentrum→Ost→Süd, taktTicks 120) + 2 Busse (einer bei Zentrums-Distanz); nur aktiv wenn Netz keine Linie hat (Prototyp-Hack, TODO).
+- **`SetupVehicleVisualizer()`** — `private void` — VehicleVisualizer als Kind der CityView (sonst Main), Initialize(_transitNetwork).
+- **`EconomySubsystem`** — `private sealed class : ISimulationSubsystem` — Adapter: EconomySystem.Tick() (ODF-4), deterministischer Zustands-Hash (Seed, TickCount, Budget, Schulden, Zinsen, Summen).
+- **`CitizenSubsystem`** — `private sealed class : ISimulationSubsystem` — Adapter: CitizenSystem.Tick(), Hash über alle Bewohner (aufsteigende IDs, Zustand + Zufriedenheit + Tagesplan).
+- **`TransitSubsystem`** — `private sealed class : ISimulationSubsystem` — Adapter: M6.5 treibt je Sim-Tick alle Fahrzeuge deterministisch via `VehicleMovementSystem.AdvanceVehicle(vehicle, line, deltaTicks: 1)` (M4-Kern, Fix32-exakt); Hash über Stops/Lines/Vehicles inkl. PositionAlongRoute, Passagiere, IsActive.
+- **`CityGrowthSubsystem`** — `private sealed class : ISimulationSubsystem` — Adapter: CityGrowthSystem.Tick(infra, network), Hash über Gebäude (Id/Typ/Position/Kapazität/Wohlstand).
+- **`CitizenTransitBridge`** — `private sealed class : ITransitNetwork` — Bridge Citizens ↔ Transit: IsLineAvailableAtStop über geordnete Listen (deterministisch).
+- **`HashState(Action<MemoryStream>)`** — `private static ulong` — FNV-1a 64 über deterministische Serialisierung.
+- **`WriteI32`/`WriteU32`/`WriteI64`/`WriteU64`/`WriteString`** — private Little-Endian-Schreibhelfer.
+
+### scripts/CameraController.cs
+- **`CameraController`** — `public partial class CameraController : Camera3D` — M6.5-Orbit-Kamera (Prototyp): State-basiert (Fokus + Yaw/Pitch/Distanz), Transform jeden Frame via LookAt; keine UI-Texte (i18n-Gate), headless-sicher.
+- **Export-Parameter** — `FocusPoint (1000,0,1000)`, `MinDistance 50`, `MaxDistance 6000`, `OrbitSensitivity 0.005 rad/px`, `ZoomStep 0.9`, `PanSpeedFactor 0.15`, `HeightSpeedFactor 0.06`, `PitchMinDegrees 5`, `PitchMaxDegrees 85`.
+- **`_Ready()`** — `public override void _Ready()` — Initialzustand aus Szenen-Position rekonstruieren (yaw/pitch/distance aus Offset zum Fokus, Fallback 1200/45°/40°), ClampState, ApplyTransform, InputMap-Verifikation loggen.
+- **`_UnhandledInput(InputEvent)`** — `public override void _UnhandledInput(...)` — Maus: Orbit-Drag (camera_orbit) + Mausrad-Zoom (camera_zoom); UI hat Vorrang.
+- **`_Process(double)`** — `public override void _Process(...)` — Tastatur: Pan (camera_pan_*, kamera-relativ in XZ) + Höhe (camera_height_*, Q/Shift ↑, E/Ctrl ↓), distanzproportional.
+- **`ZoomIn()`/`ZoomOut()`** — `private void` — Distanz *= bzw. /= ZoomStep, geklemmt.
+- **`ClampState()`** — `private void` — Pitch/Distanz klemmt (Yaw unbeschränkt).
+- **`ApplyTransform()`** — `private void` — Einzige Transform-Schreibstelle: Kugelkoordinaten-Offset + LookAt(Fokus, Up).
+- **`LogInputMapStatus()`** — `private void` — Prüft die 8 erwarteten Input-Actions auf Existenz + Event-Anzahl (headless verifizierbar, fehlend → GD.PrintErr).
+- **`ExpectedActions`** — `private static readonly (string, int)[]` — Doku der Eingabe-Zuordnung (orbt 2, zoom 2, pan je 2, höhe je 2 Events).
+
+### scripts/HUD.cs
+- **`HUD`** — `public partial class HUD : Control` — Erstes übersetztes HUD (M6, ADR-004): 7 Labels via explizitem Tr() (AutoTranslate=false → headless prüfbar), reagiert auf LocalizationManager.LanguageChanged.
+- **`_Ready()`** — `public override void _Ready()` — Label-Nodes holen, LanguageChanged abonnieren, RefreshTexts(), Start-Log (Locale, Sprache, Bauen, Speichern).
+- **`_ExitTree()`** — `public override void _ExitTree()` — Event abbestellen.
+- **`RefreshTexts()`** — `private void` — Alle 7 Label-Texte neu auflösen (Sprache/Bauen/Linien/Pause/Speichern/Tick/Geld).
+- **`_UnhandledKeyInput(InputEvent)`** — `public override void _UnhandledKeyInput(...)` — F1: Sprache DE⇄EN toggeln (Optionsmenü folgt später, gleiche API).
+
+### scripts/LocalizationManager.cs
+- **`LocalizationManager`** — `public partial class LocalizationManager : Node` — i18n-Integration (M6, ADR-004): Autoload-Singleton für Locale-Steuerung; Deutsch deterministischer Default.
+- **`SupportedLanguages`** — `public static readonly string[] SupportedLanguages = { "de", "en" }` — ADR-004.
+- **`LanguageChanged`** — `public static event Action?` — Wird nach jeder Sprachumschaltung ausgelöst (TranslationServer-Signal "locale_changed" nicht als statisches Event exponiert, empirisch 4.7.1 mono).
+- **`CurrentLanguage`** — `public static string CurrentLanguage` — Aktive Sprache (TranslationServer.GetLocale()).
+- **`_Ready()`** — `public override void _Ready()` — Einmalige Initialisierung: EnsureTranslationsLoaded(), SetLanguage("de") (OS-Sprache ignoriert).
+- **`SetLanguage(string)`** — `public static void SetLanguage(string code)` — Locale umschalten (validiert; unbekannt → PushWarning), LanguageChanged feuern.
+- **`EnsureTranslationsLoaded()`** — `private static void` — .po-Registrierung sicherstellen: GetLoadedLocales-Check, sonst ResourceLoader + AddTranslation (kein Doppel-Registrieren).
+
+### scripts/MapRenderer.cs
+- **`MapRenderer`** — `public partial class MapRenderer : Node3D` — M6-Karten-Renderer: visualisiert Infrastructure deterministisch als Godot-3D-Primitive (Strassen/Rail/Path = Boxen, Stops = Scheibe + Mast); reines Lesen, kein Sim-Eingriff.
+- **Farb-Konstanten** — `RoadColor`, `RailColor`, `PathColor`, `StopColor`, `StopPostColor` — Warme Farbwelt (Art-Richtung C), feste Konstanten.
+- **Abmessungs-Konstanten** — RoadWidth 6.0, RailWidth 2.8, PathWidth 1.6, SegmentThickness 0.14, StopDiscRadius 1.3, StopPostHeight 2.4.
+- **`Render(Infrastructure)`** — `public void Render(Infrastructure infrastructure)` — Baut Child-Knoten idempotent neu (Clear + Segmente + Stops in Einfüge-Reihenfolge).
+- **`Clear()`** — `public void Clear()` — Entfernt alle gerenderten Knoten.
+- **`BuildSegmentNode(...)`** — `private static MeshInstance3D` — Flache Box zwischen Start/Ende (Sim X/Y → Godot X/Z, Yaw = atan2(dx, dz)).
+- **`BuildStopNode(Stop, ...)`** — `private static Node3D` — Haltestellen-Knoten: Zylinder-Scheibe + Mast.
+- **`ToWorld(Position)`** — `private static Vector3` — Fix32 → float (nur Render-Schicht).
+- **`MakeMaterial(Color)`** — `private static StandardMaterial3D` — Albedo + Roughness 0.92.
+
+### scripts/SteamManager.cs
+- **`SteamManager`** — `public partial class SteamManager : Node` — Steamworks-Integration (M5): Autoload-Singleton, kapselt Steamworks.NET (NuGet 2024.8.0, SDK 1.60); Sim-Kern bleibt Steam-frei.
+- **`AppId`** — `public const uint AppId = 480` — Spacewar-Test-App (Valve Dev-Test, ADR-006).
+- **`IsRunning`** — `public static bool IsRunning { get; private set; }` — true sobald Steamworks nutzbar.
+- **`PlayerName`** — `public static string? PlayerName` — Lokaler Steam-Nutzer (SteamFriends.GetPersonaName()).
+- **`_Ready()`** — `public override void _Ready()` — Einmalig: DllImport-Resolver (steam_api64.dll), SteamAPI.IsSteamRunning(), SteamAPI.Init() (kein SteamClient.Init in 2024.8.0), alles try/catch (crash-sicher, headless-CI-tauglich).
+- **`_Process(double)`** — `public override void _Process(...)` — SteamAPI.RunCallbacks() pro Frame, solange aktiv.
+- **`_ExitTree()`** — `public override void _ExitTree()` — SteamAPI.Shutdown() (try/catch, ignorierte Fehler).
+- **`ResolveSteamNativeLibrary(...)`** — `private static IntPtr` — Findet steam_api64.dll im Assembly-Ausgabe- und Projektverzeichnis (libs/win-x64-Fallback).
+
+### scripts/VehicleVisualizer.cs
+- **`VehicleVisualizer`** — `public partial class VehicleVisualizer : Node3D` — M6.5-Fahrzeug-Visualisierung: instanziiert Vehicle-Szenen (Bus/Tram/Metro) je Fahrzeug und interpoliert PositionAlongRoute entlang der Linie; reines Rendering (Fix32 → float nur hier).
+- **Szenen-Pfade** — `BusScenePath`, `TramScenePath`, `MetroScenePath` — res://scenes/vehicles/*.tscn.
+- **`LinePalette`** — `public static readonly Color[] LinePalette` — Feste 8-Spieler-Palette (GDD 10.1): Verkehrsrot, Ampelgrün, Himmelblau, Sonnengelb, Violett, Türkis, Orange, Rosé.
+- **`VehicleNodeCount`** — `public int VehicleNodeCount` — Instanziierte Fahrzeug-Knoten (Headless-Nachweis).
+- **`Initialize(TransitNetwork)`** — `public void Initialize(...)` — Baut Knoten einmalig (nur Fahrzeuge mit Linie ≥ 2 Stops) + Refresh.
+- **`Refresh()`** — `public void Refresh()` — M6.5-Hook (nach jedem Sim-Tick): neue Fahrzeuge instanziieren, entfernte freigeben, Position + Yaw aktualisieren.
+- **`ResolveLine(Vehicle)`** — `private Line?` — Linie des Fahrzeugs (null wenn nicht zugeordnet).
+- **`BuildVehicleNode(Vehicle, Line)`** — `private Node3D` — Szene instanziieren, LineColor (Palette) vor add_child setzen (VehicleColor-Export oder Set("LineColor")).
+- **`ScenePathFor(VehicleType)`** — `private static string` — Typ → Szenen-Pfad.
+- **`LineColorFor(Line)`** — `private Color` — Palette[Linienindex % 8], deterministisch.
+- **`RouteToWorld(Line, Fix32)`** — `private static (Vector3 World, float Yaw)` — Polyline-Interpolation + Fahrtrichtung (yaw = atan2(-dx, -dz), -Z-Front).
+
+### scenes/vehicles/VehicleColor.cs
+- **`VehicleColor`** — `public partial class VehicleColor : Node3D` — Wurzel-Skript der prozeduralen Fahrzeug-Szenen (M4): färbt Körper-Meshes per Linienfarbe.
+- **`BodyGroup`** — `public const string BodyGroup = "vehicle_body"` — Gruppe der Hauptkörper-Meshes.
+- **`LineColor`** — `[Export] public Color LineColor { get; set; }` — Linienfarbe (Default: Verkehrsrot 0.85, 0.23, 0.16).
+- **`_Ready()`** — `public override void _Ready()` — Färbung beim Start.
+- **`SetLineColor(Color)`** — `public void SetLineColor(Color color)` — Laufzeit-Umfärbung.
+- **`ApplyLineColor()`** — `private void` — albedo-Farbe setzen (StandardMaterial3D, Material je Instanz dupliziert, IsAncestorOf-Filter).
+
 ### src/OpenMotion.Core/Transit/VehicleType.cs
 - **`VehicleType`** — `public enum VehicleType { Bus, Tram, Metro }` — Verkehrsmittel-Typen des MVP (GDD Kap. 7).
 - **`VehicleTypeParams`** — `public static class VehicleTypeParams` — Balancierte Startwerte (GDD Kap. 7/11), Fix32/int.
@@ -299,29 +532,35 @@ project: OpenMotion
 - **`ApplySubsidies(IReadOnlyList<LineEconomicStatus>)`** — `public Fix32 ApplySubsidies(...)` — Bedarfsbasierte Subventionen je Linie (ODF-5: Betrieb + Service-Gap ≤ Max, gedeckelt).
 - **`Tick()`** — `public void Tick()` — Tick-Abschluss: Zinsen kapitalisieren, Insolvenzprüfung (wachsende Zinsen, gedeckelt).
 
-### scripts/SimulationRunner.cs
-- **`SimulationRunner`** — `public partial class SimulationRunner : Node` — Godot-Seite der Gesamtsimulation (M4, SimLoop-Integration): bindet SimulationOrchestrator in die Engine-Tick-Schleife.
-- **Konstanten** — `MasterSeed = 20260809`, `DebugReportIntervalTicks = 300`, `MaxCatchUpSeconds = 0.25`.
-- **`_Ready()`** — `public override void _Ready()` — Start-Setup: Infrastruktur (1 Strasse + 2 Stops), Transit-Netz, 120 Bewohner, Subsysteme in kanonischer Reihenfolge, Orchestrator.
-- **`_PhysicsProcess(double)`** — `public override void _PhysicsProcess(double delta)` — Tick-Akkumulator: feste 30-Hz-Sim-Ticks (framerate-unabhängig, Spiral-of-Death-Schutz), Hash-Report alle 300 Ticks.
-- **`_ExitTree()`** — `public override void _ExitTree()` — Abschlussbericht (Ticks, Hash-Berichte).
-- **`EconomySubsystem`** — `private sealed class : ISimulationSubsystem` — Adapter: EconomySystem.Tick() (ODF-4), deterministischer Zustands-Hash.
-- **`CitizenSubsystem`** — `private sealed class : ISimulationSubsystem` — Adapter: CitizenSystem.Tick(), Hash über alle Bewohner (aufsteigende IDs).
-- **`TransitSubsystem`** — `private sealed class : ISimulationSubsystem` — Adapter: passives Netz in M4, Hash über Stops/Lines/Vehicles inkl. Positionen.
-- **`CityGrowthSubsystem`** — `private sealed class : ISimulationSubsystem` — Adapter: CityGrowthSystem.Tick(infra, network), Hash über Gebäude.
-- **`CitizenTransitBridge`** — `private sealed class : ITransitNetwork` — Bridge Citizens ↔ Transit: Linien-Verfügbarkeit an Haltestelle (deterministisch).
-- **`HashState(Action<MemoryStream>)`** — `private static ulong` — FNV-1a 64 über deterministische Serialisierung.
-- **`WriteI32`/`WriteU32`/`WriteI64`/`WriteU64`/`WriteString`** — private Little-Endian-Schreibhelfer.
+### src/OpenMotion.Core.Tests/InMemoryTransport.cs (Test-Double, M5)
+- **`InMemoryTransportHub`** — `public sealed class InMemoryTransportHub` — In-Memory-Transport-Netz (NDD §11.2 „Fake-Transport"): registriert Transports unter stabilen Peer-Ids, synchron/geordnet (Send-Reihenfolge = Empfangs-Reihenfolge pro Peer-Paar).
+- **`CreateTransport(string)`** — `public InMemoryTransport CreateTransport(string peerId)` — Erzeugt + registriert (Duplikat → ArgumentException).
+- **`Deliver(string, string, byte[])`** — `internal void` — Zustellung an Ziel-Peer.
+- **`InMemoryTransport`** — `public sealed class InMemoryTransport : IMultiplayerTransport` — Test-Double der Session-Transport-Schnittstelle (Sub-Namespace ...Tests.Multiplayer, kollisionsfrei zum Networking-InMemoryTransport).
+- **`PeerId`** — `public string PeerId { get; }`.
+- **`MessageReceived`** — `public event Action<TransportMessage>?`.
+- **`Send(string, byte[])`/`Broadcast(IReadOnlyList<string>, byte[])`/`Receive(string, byte[])`** — Hub-Zustellung (synchron, geordnet).
 
-### scenes/vehicles/VehicleColor.cs
-- **`VehicleColor`** — `public partial class VehicleColor : Node3D` — Wurzel-Skript der prozeduralen Fahrzeug-Szenen (M4): färbt Körper-Meshes per Linienfarbe.
-- **`BodyGroup`** — `public const string BodyGroup = "vehicle_body"` — Gruppe der Hauptkörper-Meshes.
-- **`LineColor`** — `[Export] public Color LineColor { get; set; }` — Linienfarbe (Default: Verkehrsrot 0.85, 0.23, 0.16).
-- **`_Ready()`** — `public override void _Ready()` — Färbung beim Start.
-- **`SetLineColor(Color)`** — `public void SetLineColor(Color color)` — Laufzeit-Umfärbung.
-- **`ApplyLineColor()`** — `private void` — albedo-Farbe setzen (StandardMaterial3D, Material je Instanz dupliziert, IsAncestorOf-Filter).
+### src/OpenMotion.Core.Tests/MapTests.cs (M6, 10 Tests)
+- **`MapTests`** — xUnit: `Generate_SameSeed_ProducesIdenticalMap`, `Generate_DifferentSeeds_ProduceDifferentMaps`, `Generate_HasStartInfrastructure_AtLeastThreeRoadsAndOneStop` (Kreuz ≥ 3 Road, ≥ 1 Rail, Stops am Netz verankert, Koordinaten in [0,2000]), `Generate_UsesDefaultDimensions_2000x2000`, `Generate_InvalidDimensions_AreRejected`, `Serializer_Roundtrip_ProducesIdenticalMap`, `Serializer_SameMap_ProducesIdenticalBytes`, `Serializer_Roundtrip_WorksForMultipleSeeds` (0/1/42/20260809/MaxValue), `Serializer_RejectsUnknownFormatVersion`, `Serializer_RejectsCorruptInput` — alle grün.
+- **Test-Helfer** — `P(decimal, decimal)` (Fix32-Position), `AssertMapEqual(MapData, MapData)` (Seed/Dimensionen/Segmente/Stops vollständig), `Signature(MapData)` (kanonische Raw-Signatur).
 
-### src/OpenMotion.Core.Tests/* (xUnit-Testsuiten)
+### src/OpenMotion.Core.Tests/MultiplayerSessionTests.cs (M5, 12 Tests)
+- **`SessionConfigTests`** — PlayerCount < 2 / > 8 → ArgumentOutOfRangeException; TickRate als Build-Konstante 30 (nicht änderbar).
+- **`MultiplayerSessionTests`** — Host+2 Clients: identische Frames/Reihenfolge (Replay-Logs bit-identisch, Ordnung je Tick P0→P1→P2), Determinismus (30 Ticks → identische Tick-Hashes, 6/6 HashReports verifiziert), Desync (manipulierter Client-Seed → DesyncEvent bei Tick 10, Peer „clientB", Expected ≠ Actual), 8-Spieler-Session (24 Frames identisch über alle Clients), PlayerId-Zuweisung deterministisch nach sortierter PeerId (unabhängig von Join-Reihenfolge), Duplicate-Join ignoriert, Tick-Barriere (Tick 1 wartet auf Tick 0 — Jitter-Puffer), SubmitInput mit falscher PlayerId → ArgumentException, JoinSession ohne StartSession → InvalidOperationException.
+- **Test-Helfer** — `Frame(uint tick, byte playerId)`, `CreateSession3(Func<int, LockstepSession>? clientBFactory)` (Host + 2 Clients via InMemoryTransportHub).
+
+### src/OpenMotion.Core.Tests/NetworkingIntegrationTests.cs (M5, 1 Test)
+- **`MultiplayerNetworkingIntegrationTests`** — `SessionOverNetworkingTransport_HostPlusTwoClients_IdenticalFramesAndHashes_AllReportsVerified`: MultiplayerSession über echten Networking-Stack (TransportWire + InMemoryTransport + NetworkingTransportAdapter), 12 Ticks, identische Ganzzustands-Hashes auf allen 3 Peers, 2/2 HashReports verifiziert, keine Desync-Events, 36 identische Replay-Frames.
+- **Test-Helfer** — `Frame(uint, byte)`, `PumpAll(params NetworkingTransportAdapter[])` (Adapter einmal pro Tick drainieren, Host zuerst).
+
+### src/OpenMotion.Core.Tests/NetworkingTests.cs (M5, 20 Tests)
+- **`InMemoryTransportTests`** — Send an verlinkten Peer → identischer Payload + Absender, leere Queue → false, Latenz-Semantik (nicht vor Due-Tick empfangbar), unbekannter Peer → InvalidOperationException, PeerConnected/PeerDisconnected-Events, Determinismus (feste Latenz-Schedule → identische Zustellreihenfolge; gleicher Jitter-Seed → identische Ankunftssequenz).
+- **`NetcodeTests`** — InputFrame-Roundtrip (alle Felder), Empty-Frame-Roundtrip, DesyncReport-Roundtrip, Framing-Layout [Len|Type|Body], korrupte Länge/Puffergröße/zu kurzer Puffer/unbekannter Typ/falscher Typ → InvalidDataException.
+- **`P2PSessionTests`** — Broadcast an 2 Peers (beide empfangen denselben Frame), gezielter Send (nur Ziel), Teilnehmerliste auto via Connect/Disconnect (eigene ID nie Teilnehmer), DesyncReport-Event, Send an Nicht-Teilnehmer → ArgumentException.
+- **Test-Helfer** — `Drain(InMemoryTransport)` (Queue leeren).
+
+### src/OpenMotion.Core.Tests/* (xUnit-Testsuiten, unverändert)
 - **`CitizensTests`** — Tagesplan-Determinismus, Home→Work→Home, Leisure-Fenster, Warte-Decay, Zufriedenheit in [0,1] über 3 Tage, RoutingPreference (7 Fälle), CitizenSystem-Spawn/Tick (mit/ohne Netz).
 - **`CityGrowthTests`** — GetSegmentsNear/GetStopsNear, kein Wachstum ohne Infrastruktur/Qualität, Gebäude NEBEN der Strasse, Determinismus, Residential+Commercial, Stop-Bonus, Qualitäts-Einfluss.
 - **`DeterministicRandomTests`** — Seed-Identität, Golden-Sequenz (Referenzwerte verankert), Bereichsgarantien, Reproduzierbarkeit.
@@ -335,4 +574,4 @@ project: OpenMotion
 - **`VehicleMovementTests`** — 26 Tests: exakte Bewegung (Speed×Ticks), mehrere Aufrufe == ein Aufruf, Stop-Ankuenfte + Oeffnen-Tick, Kapazitätsgrenze, Ziel-Filter, Determinismus (6 Tick-Schritte), Metro schneller als Bus (100 vs. 200 Ticks), Validierungsfälle, PassengerFlow-Unit-Tests.
 
 ### Weitere Dateien ohne Funktionen
-- **Konfiguration** (.csproj, .sln, project.godot, .gitignore, environment.json, ci.yml) und **Szenen** (.tscn), **i18n** (.po, check_parity.py), **Doku** (README, CHANGELOG, KNOWN_ISSUES, IDEA), **Logo-Werkzeuge** (assets/logo/_*.py), **Assets** (SVG/JSON/TXT, sync-openmotion.sh) — keine Funktionen/Klassen im obigen Sinne; Zweck siehe [[files]].
+- **Konfiguration** (.csproj, .sln, project.godot, .gitignore, environment.json, ci.yml, export_presets.cfg) und **Szenen** (.tscn), **i18n** (.po, check_parity.py), **Doku** (README, CHANGELOG, KNOWN_ISSUES, IDEA, docs/STEAMWORKS_SETUP_ANLEITUNG.md), **Logo-Werkzeuge** (assets/logo/_*.py), **Assets** (SVG/ICO/JSON/TXT, sync-openmotion.sh) — keine Funktionen/Klassen im obigen Sinne; Zweck siehe [[files]].
