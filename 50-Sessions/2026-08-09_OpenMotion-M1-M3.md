@@ -2,7 +2,7 @@
 tags: [session]
 date: 2026-08-09
 project: OpenMotion
-summary: M1-M3 abgeschlossen — Godot-Scaffold, Lockstep-Kern, Simulationsmodule (147 Tests), D2 Logo freigegeben
+summary: M1-M4 abgeschlossen — Godot-Scaffold, Lockstep-Kern, Simulationsmodule, Vehicle-Bewegung + Modelle (173 Tests), D2 Logo freigegeben
 ---
 # Session: 2026-08-09 — OpenMotion M1–M3 (Boilerplate → Simulation)
 
@@ -22,7 +22,7 @@ summary: M1-M3 abgeschlossen — Godot-Scaffold, Lockstep-Kern, Simulationsmodul
 - **M1 ✅**: Godot 4.7.1 .NET, .NET SDK 8.0.423, SimState-Kern, xUnit (3 Tests), CI (Win+Linux), i18n DE/EN (17 Strings paritätisch), README/CHANGELOG/KNOWN_ISSUES
 - **M2 ✅**: Fix32 (32.32 Fixed-Point, 1/3 = 0x55555555), DeterministicRandom, Lockstep (InputCommand, InputFrame, ReplayLog, TickHash 64-bit, LockstepSession, Hash alle 10 Ticks) — 42 Tests
 - **D2 ✅ FREIGEGEBEN**: `logo_simple_fixed.svg` (16 Pfade, Rot 5,5 %, Steam-taugliche Skalierungen) — logo_clean.svg war farbdefekt (97 % weiß, vtracer-Übermaltung)
-- **M3 ✅**: Economy (Budget/Subventionen/Kredite), Transit (Bus/Tram/Metro, balancierte Startwerte), Citizens (Routing Reisezeit+Preis), City-Growth (Gebäude entlang Transportwegen), SimulationOrchestrator (Hash alle 10 Ticks), Serialization/Replay-Export — **147 Tests grün**
+- **M4 ✅**: VehicleMovementSystem (deterministische Bewegung entlang Route, Stop-Ankünfte, Fahrgast-Ein-/Ausstieg mit Kapazität), PassengerFlow, Godot-Modelle (Bus/Tram/Metro .tscn, Linienfarbe via VehicleColor.cs), SimulationRunner (30 Hz-Tick in Godot, 4 Subsysteme: Economy/Citizens/Transit/CityGrowth, Hash 0x407B0763D2ABA9CB bei Tick 300, framerate-unabhängig) — **173 Tests grün**
 - **Sync**: Projekt-Repo → `https://github.com/Kompetenzteam/openmotion` (PRIVATE, sync-openmotion.sh); Brain → `hermes-obsidian-brain-gamedev` (PUBLIC, sync-brain.sh — Fix: git status --porcelain erfasst untracked Dateien)
 - **Regeln**: `delegation.max_concurrent_children=9` gesetzt; Brain-Sync-Pflicht nach jeder Dateiänderung
 
