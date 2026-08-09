@@ -33,6 +33,11 @@ Der Prototyp (M6.6) ruckelt extrem (User-Feedback). Als Gegenmaßnahme wird Perf
 - ❌ NVIDIA-only Extensions als Voraussetzung
 - ❌ DLSS als Pflicht-Feature
 
+### Teststrategie (2026-08-09, Glieder: "nur RTX-Karte verbaut, keine AMD zum Testen")
+- **Lokal:** Nur **GeForce RTX** verfügbar — alle manuellen/visuellen Tests laufen dort.
+- **AMD-Absicherung ohne Hardware:** (1) GPU-agnostischer Code als Review-Gate (keine NVIDIA-only API/Shader), (2) Vulkan-API = gemeinsamer Standard, (3) CI-Smoke-Test mit Software-Renderer (Vulkan swrast/Lavapipe) fängt Kompatibilitäts-Brüche ab, (4) spätere Community-/Beta-Phase (M8) nutzt AMD-Nutzer als reale Testbasis.
+- **Ehrlicher Status:** AMD-Performance-Zahlen sind bis zur Beta nicht messbar — nur Kompatibilität (kein Crash/Artefakte) via Software-Renderer. Das ist im KNOWN_ISSUES.md zu führen.
+
 ## Alternativen
 | Option | Pro | Contra |
 |---|---|---|
