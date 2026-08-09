@@ -14,7 +14,7 @@ project: OpenMotion
 | Datei | Typ | Status | Zweck | Link |
 |-------|-----|--------|-------|------|
 | .github/workflows/ci.yml | CI/CD | unverändert | GitHub-Actions-Workflow: Build + Lockstep-Tests auf Windows/Linux | — |
-| .gitignore | Konfiguration | unverändert | Git-Ignore-Regeln (Godot, .NET, IDE) | — |
+| .gitignore | Konfiguration | geändert | Git-Ignore-Regeln (Godot, .NET, IDE); M6.6: `build/` + `data_OpenMotion*` ergänzt (Commit 3f30807, GitHub 100MB-Limit) | — |
 | .hermes/environment.json | Konfiguration | unverändert | Hermes-Build-/Test-Recipe (dotnet build/test OpenMotion.sln) | — |
 | assets/logo/_analyze3.py | Werkzeug | unverändert | Logo-Analyse: Connected Components + Farbstatistik | — |
 | assets/logo/_analyze4.py | Werkzeug | unverändert | Logo-Analyse: Eckfarben + Top-8-Farben | — |
@@ -30,7 +30,7 @@ project: OpenMotion
 | assets/logo/_render_check.py | Werkzeug | unverändert | Feather-Sweep + SVG-Render-ASCII-Check | — |
 | assets/logo/_vectorize.py | Werkzeug | unverändert | Optimierte Vektorisierung: Farbquantisierung + vtracer | — |
 | assets/logo/_verify_gray.py | Werkzeug | unverändert | Grau-Reste-Verifikation des bereinigten Logos | — |
-| assets/logo/logo_clean.ico | Asset (ICO) | neu | App-Icon (aus logo_clean.svg konvertiert), in export_presets.cfg referenziert | — |
+| assets/logo/logo_clean.ico | Asset (ICO) | entfernt | App-Icon (aus logo_clean.svg konvertiert), in export_presets.cfg referenziert — nicht mehr im Arbeitsbaum (war untracked) | — |
 | assets/logo/logo_clean.svg | Asset (SVG) | unverändert | Bereinigtes Logo (vtracer, 443×224) | — |
 | assets/logo/logo_nobg.svg | Asset (SVG) | unverändert | Logo ohne Hintergrund (vtracer, 443×224, roh) | — |
 | assets/logo/logo_simple.svg | Asset (SVG) | unverändert | Vereinfachtes Logo (vtracer, 443×224) | — |
@@ -44,7 +44,7 @@ project: OpenMotion
 | assets/src/icefront.svg | Asset (SVG) | unverändert | Referenz-Silhouette ICE-Front (Inkscape) | — |
 | assets/src/train.svg | Asset (SVG) | unverändert | Referenz-Silhouette Zug (Inkscape) | — |
 | assets/src/tram.svg | Asset (SVG) | unverändert | Referenz-Silhouette Tram (Illustrator) | — |
-| CHANGELOG.md | Doku | geändert | Änderungshistorie (M1–M6.5): M5/M6/M6.5-Einträge ergänzt (Multiplayer, Steamworks, Map, i18n, Kamera) | — |
+| CHANGELOG.md | Doku | geändert | Änderungshistorie (M1–M6.6): M6.6-Einträge ergänzt (Stadt-Quadranten-Karte, BuildingVisualizer, EnvironmentBuilder, 217 Tests) | — |
 | docs/STEAMWORKS_SETUP_ANLEITUNG.md | Doku | neu | Steamworks-Anmeldung Schritt-für-Schritt (Partnerkonto, App-ID, SDK, Spacewar) — für Geschäftsführer ohne Technik-Wissen | — |
 | export_presets.cfg | Konfiguration | neu | Godot-Export-Preset „Windows Desktop" (build/openmotion_windows.exe, x86_64, App-Icon logo_clean, Version 0.1.0) | — |
 | i18n/check_parity.py | Werkzeug | unverändert | i18n-Paritätscheck DE↔EN (msgid-Mengen, leere msgstr) | — |
@@ -58,17 +58,19 @@ project: OpenMotion
 | project.godot | Konfiguration | geändert | Godot-Projekt: Main-Scene, Autoloads (LocalizationManager, SteamManager), 8 Kamera-Input-Actions, i18n DE/EN, GL Compatibility | — |
 | README.md | Doku | unverändert | Projekt-README: Tech-Stack (ADR-006), Build & Test, Struktur | — |
 | scenes/Main.tscn | Szene | unverändert | Hauptszene; bindet scripts/SimulationRunner.cs | — |
-| scenes/city/CityView.tscn | Szene | neu | 3D-Stadtansicht: MapRenderer + Sun (DirectionalLight3D) + Orbit-Camera3D (CameraController) | — |
+| scenes/city/CityView.tscn | Szene | geändert | 3D-Stadtansicht: MapRenderer + Sun (DirectionalLight3D) + Orbit-Camera3D (CameraController); M6.6: + EnvironmentBuilder-Knoten (Skript-Bindung), Sun deklarativ warm (light_energy 1.15, warmweiss) | — |
 | scenes/ui/HUD.tscn | Szene | neu | Erstes übersetztes HUD: 7 Labels (Sprache/Bauen/Linien/Pause/Speichern/Tick/Geld), AutoTranslate=false | — |
 | scenes/vehicles/Bus.tscn | Szene | unverändert | Prozedurales Bus-Modell (BoxMesh/CylinderMesh, VehicleColor.cs) | — |
 | scenes/vehicles/Metro.tscn | Szene | unverändert | Prozedurales Metro-Modell (Stufen-Nase, Scheinwerfer) | — |
 | scenes/vehicles/Tram.tscn | Szene | unverändert | Prozedurales Tram-Modell (Niederflur, Pantograph) | — |
 | scenes/vehicles/VehicleColor.cs | C# (Godot) | unverändert | Färbt Fahrzeug-Körper per Linienfarbe (Export LineColor, Gruppe vehicle_body) | — |
-| scripts/CameraController.cs | C# (Godot) | neu | M6.5-Orbit-Kamera (Camera3D): Orbit/Zoom/Pan/Höhe state-basiert, 8 Input-Actions, headless-prüfbar | — |
+| scripts/BuildingVisualizer.cs | C# (Godot) | neu | M6.6-Gebäude-Rendering: CityGrowth-Gebäude als 3D-Quader (Höhe/Farbe/Fensterband deterministisch aus Building-Id-Hash), inkrementeller Refresh nach jedem Sim-Tick | — |
+| scripts/CameraController.cs | C# (Godot) | unverändert | M6.5-Orbit-Kamera (Camera3D): Orbit/Zoom/Pan/Höhe state-basiert, 8 Input-Actions, headless-prüfbar | — |
+| scripts/EnvironmentBuilder.cs | C# (Godot) | neu | M6.6-Umgebung: Boden (3000×3000), Park/Teich-Akzente, WorldEnvironment (Himmel pastell, Ambient, Tonemap Filmic), warme Sonnen-Justierung; Build() idempotent | — |
 | scripts/HUD.cs | C# (Godot) | neu | Erstes übersetztes HUD (M6): bindet 7 Label-Texte via Tr(), F1-Sprachumschaltung DE⇄EN | — |
 | scripts/LocalizationManager.cs | C# (Godot) | neu | i18n-Autoload (M6, ADR-004): Locale-Steuerung de/en, LanguageChanged-Event, .po-Nachlade-Sicherung | — |
 | scripts/MapRenderer.cs | C# (Godot) | neu | M6-Karten-Renderer: Infrastruktur (Strassen/Schienen/Gehwege/Haltestellen) als Godot-3D-Primitive | — |
-| scripts/SimulationRunner.cs | C# (Godot) | geändert | SimLoop-Integration (M4→M6.5): 30-Hz-Tick-Akkumulator, Subsystem-Adapter, CityView + Demo-Linie + Fahrzeug-Visualisierung | — |
+| scripts/SimulationRunner.cs | C# (Godot) | geändert | SimLoop-Integration (M4→M6.6): 30-Hz-Tick-Akkumulator, Subsystem-Adapter, CityView + Demo-Linie + Fahrzeug-Visualisierung; M6.6: Referenzkarte einmal im Start-Setup (Wachstums-Infrastruktur), SetupBuildingVisualizer + Refresh-Hook, CityGrowthSubsystem.Growth-Exposé | — |
 | scripts/SteamManager.cs | C# (Godot) | neu | M5-Steamworks-Autoload: SteamAPI.Init (App-ID 480), IsRunning, DllImport-Resolver, crash-sicher | — |
 | scripts/VehicleVisualizer.cs | C# (Godot) | neu | M6.5-Fahrzeug-Visualisierung: instanziiert Vehicle-Szenen je Typ, Linienfarbe aus 8-Spieler-Palette, Refresh nach Sim-Tick | — |
 | src/OpenMotion.Core.Tests/CitizensTests.cs | C# (Test) | unverändert | xUnit: Citizen-Tagesablauf, Zufriedenheit, RoutingPreference, CitizenSystem | — |
@@ -78,7 +80,7 @@ project: OpenMotion
 | src/OpenMotion.Core.Tests/Fix32Tests.cs | C# (Test) | unverändert | xUnit: Fix32-Arithmetik, Saturierung, Div-by-0, Roundtrips | — |
 | src/OpenMotion.Core.Tests/InMemoryTransport.cs | C# (Test) | neu | M5-Test-Double: InMemoryTransportHub + InMemoryTransport (IMultiplayerTransport, synchron/geordnet) | — |
 | src/OpenMotion.Core.Tests/LockstepTests.cs | C# (Test) | unverändert | xUnit: ReplayLog, TickHash, InputCommand/InputFrame, LockstepSession | — |
-| src/OpenMotion.Core.Tests/MapTests.cs | C# (Test) | neu | xUnit (M6, 10 Tests): MapGenerator-Determinismus/Varianz, Start-Infrastruktur, MapSerializer-Roundtrip + Korruptions-Ablehnung | — |
+| src/OpenMotion.Core.Tests/MapTests.cs | C# (Test) | geändert | xUnit (M6/M6.6, 11 Tests): MapGenerator-Determinismus/Varianz, Start-Infrastruktur, MapSerializer-Roundtrip + Korruptions-Ablehnung; M6.6: + Generate_HasDenseCityLayout_PrototypeDensity (Stadt-Quadranten-Dichte) | — |
 | src/OpenMotion.Core.Tests/MultiplayerSessionTests.cs | C# (Test) | neu | xUnit (M5, 12 Tests): SessionConfig, Host/Client-Frames, Determinismus, Desync, 8-Spieler, Tick-Barriere | — |
 | src/OpenMotion.Core.Tests/NetworkingIntegrationTests.cs | C# (Test) | neu | xUnit (M5): MultiplayerSession über echten Networking-Stack (TransportWire + Adapter), identische Hashes | — |
 | src/OpenMotion.Core.Tests/NetworkingTests.cs | C# (Test) | neu | xUnit (M5, 20 Tests): InMemoryTransport (Latenz/Jitter-Determinismus), Netcode (Framing/Fuzzing), P2PSession | — |
@@ -105,7 +107,7 @@ project: OpenMotion
 | src/OpenMotion.Core/Lockstep/ReplayLog.cs | C# (Core) | unverändert | Append-only Eingabe-Log (IReplayStore/InMemoryReplayStore) | — |
 | src/OpenMotion.Core/Lockstep/TickHash.cs | C# (Core) | unverändert | FNV-1a 64-Hash (Desync-Erkennung, NDD §5.1) | — |
 | src/OpenMotion.Core/Map/MapData.cs | C# (Core) | neu | M6-Referenzkarten-Container: Seed, Dimensionen (Fix32), Infrastructure, StartStops, Segment-Zähler | — |
-| src/OpenMotion.Core/Map/MapGenerator.cs | C# (Core) | neu | M6-deterministischer Karten-Generator: Straßenkreuz + Schienenkorridor + 8 Start-Haltestellen aus Seed | — |
+| src/OpenMotion.Core/Map/MapGenerator.cs | C# (Core) | geändert | M6.6-deterministischer Karten-Generator: Stadt-Quadranten-Muster (10 Road, 2 Path, 3 Rail-Segmente, 17 Start-Haltestellen) aus Seed; Vertrag: erste 5 Road-Stops 0=Zentrum,1=West,2=Ost,3=Süd,4=Nord | — |
 | src/OpenMotion.Core/Map/MapSerializer.cs | C# (Core) | neu | M6-deterministische Karten-Serialisierung (JSON, Fix32-as-long, Format-Version 1, ID-Verifikation) | — |
 | src/OpenMotion.Core/Multiplayer/IMultiplayerTransport.cs | C# (Core) | neu | M5-Transport-Abstraktion der Session (reliable/ordered, MessageReceived-Event, TransportMessage) | — |
 | src/OpenMotion.Core/Multiplayer/MultiplayerSession.cs | C# (Core) | neu | M5-Session (Host/Client): Seed-Verteilung, Tick-Barriere, deterministische Konsolidierung, Desync-Erkennung | — |
@@ -137,25 +139,21 @@ project: OpenMotion
 
 ## Detail-Sektionen (nur geänderte/neue Dateien)
 
-### Geändert (4)
+### Geändert (6)
 
-- **CHANGELOG.md** — M5/M6/M6.5-Einträge ergänzt: Netz-Transport (ITransport/InMemory/Netcode/P2PSession), Steamworks.NET (App-ID 480), Multiplayer-Session (Host/Client, Desync), Referenzkarte (MapGenerator/MapData/MapSerializer), MapRenderer/CityView, i18n (LocalizationManager/HUD), Kamera-Steuerung (CameraController). Siehe [[functions]] und [[dependencies]].
-- **OpenMotion.csproj** — `PackageReference Steamworks.NET 2024.8.0` (SDK 1.60) ergänzt; `None Include="libs\win-x64\steam_api64.dll"` CopyToOutputDirectory (native DLL ohne NuGet-Inhalt); Compile-Remove `src/**/*.cs` unverändert.
-- **project.godot** — `[autoload]` LocalizationManager + SteamManager ergänzt; `[input]` mit 8 Kamera-Actions (camera_orbit/zoom/pan_*/height_*, je 2 Events); `[internationalization]` DE/EN unverändert; Renderer gl_compatibility.
-- **scripts/SimulationRunner.cs** — M6: `SetupCityView()` lädt CityView.tscn + rendert Referenzkarte (`MapGenerator.Generate(20260809)`, Seed-Konstante `ReferenceMapSeed`); M6.5: `SetupDemoTransitLine()` (Demo-Bus-Linie mit 2 Fahrzeugen entlang der Karten-Stops), `SetupVehicleVisualizer()` (VehicleVisualizer-Child der CityView), `TransitSubsystem.Tick` treibt Fahrzeuge per `VehicleMovementSystem.AdvanceVehicle(…, deltaTicks: 1)`; `_PhysicsProcess` ruft nach jedem Sim-Tick `_vehicleVisualizer?.Refresh()`.
+- **CHANGELOG.md** — Drei neue M6.6-Einträge: (1) Stadt-Quadranten-Karte (MapGenerator: 10 Road/2 Path/3 Rail, 17 Stops, Determinismus unverändert, Vertrag erste 5 Road-Stops erhalten; +1 Map-Test, 217/217 grün, keine Commits), (2) BuildingVisualizer (Gebäude-Rendering, Höhen/Farben/Fensterband, inkrementeller Refresh, 27 bzw. 62 Gebäude-Node(s) in Headless-Läufen, Determinismus-Hashes bit-identisch), (3) EnvironmentBuilder (Boden/Park/Teich/WorldEnvironment/Sonne, Tonemap-Filmic-Hinweis als dokumentierte Abweichung, .tscn-Color-4-Argumente-Pitfall, 2 bit-identische Headless-Läufe). Siehe [[functions]] und [[dependencies]].
+- **.gitignore** — Commit 3f30807 (nach letztem Scan): `build/` + `data_OpenMotion*` ergänzt (GitHub 100MB-Limit, build/ aus Repo entfernt).
+- **scenes/city/CityView.tscn** — Neuer `EnvironmentBuilder`-Knoten (Skript res://scripts/EnvironmentBuilder.cs, load_steps 3→4); `Sun` deklarativ warm voreingestellt (light_energy 1.15, light_color warmweiss `Color(1, 0.96, 0.9, 1)` — Pitfall: 4 Argumente im Textformat, 3-Argument-Form ist Parse-Fehler in 4.7.1).
+- **scripts/SimulationRunner.cs** — M6.6: Referenzkarte wird jetzt EINMAL im Start-Setup erzeugt (`_referenceMap = MapGenerator.Generate(ReferenceMapSeed)`) und ist zugleich die Wachstums-Infrastruktur des CityGrowth-Subsystems (keine Mini-Startstrasse 0..60 am Weltursprung mehr — Gebäude wachsen im sichtbaren Kartenbereich ~1000,1000); `SetupBuildingVisualizer()` (BuildingVisualizer als Kind der CityView, Initialisierung mit `_cityGrowth.Growth`); M6.6-Hook in `_PhysicsProcess` (`_buildingVisualizer?.Refresh()` direkt nach `AdvanceTick()`); `_ExitTree`-Endbericht um Gebäude-Knoten + Sim-Gebäude erweitert; neues Feld `_cityGrowth` + `CityGrowthSubsystem.Growth`-Property (nur Lesen, GetBuildings).
+- **src/OpenMotion.Core.Tests/MapTests.cs** — +1 Test (M6.6): `Generate_HasDenseCityLayout_PrototypeDensity` — > 5 Road-Segmente, 2–3 Rail-Segmente, 12–20 Stops, ≥ 1 Path-Segment, alle Stops am Netz verankert (GetSegmentsNear).
+- **src/OpenMotion.Core/Map/MapGenerator.cs** — M6.6 (Parallel-Agent Karte): Stadt-Quadranten-Muster statt Kreuz — Hauptkreuz (Armlänge 350..600 seed-abhängig) + 2 parallele Strassen (Abstand 200..300) + 2 Querstrassen + Ring ⇒ 10 Road-Segmente; 2 diagonale Gehweg-Segmente (Park-Wege Nord); 3 Rail-Segmente (Ost-West-Korridor + Süd-Spur + neue Nord-Süd-Verbindung); 17 Start-Stops (13 Road: Zentrum/4 Arme/4 Block-Ecken/4 Block-Kanten + 4 Rail: Korridor-Enden/-Knoten/Nord-Ende). Determinismus: feste, seed-unabhängige Zieh-Reihenfolge (Blockabstand, Armlänge, Korridor-Offset/-Länge, Nord-Verbindung). Vertrag: erste 5 Road-Stops 0=Zentrum,1=West,2=Ost,3=Süd,4=Nord (Demo-Linie unverändert lauffähig).
 
-### Neu (28)
+### Neu (2)
 
-- **src/OpenMotion.Core/Map/*** (M6, Parallel-Agent Map) — `MapData` (Container), `MapGenerator` (Seed → Straßenkreuz + Schienenkorridor + 8 Stops, 2000×2000), `MapSerializer` (Utf8JsonWriter, Fix32-as-long, FormatVersion 1, ID-Verifikation beim Import). Details in [[functions]].
-- **src/OpenMotion.Core/Multiplayer/*** (M5, Parallel-Agent Multiplayer) — `MultiplayerSession` (Host-Ordnungsgeber, Tick-Barriere, Hash-Vergleich alle 10 Ticks), `SessionConfig`, `MultiplayerWire` (Binär-Umschlag), `IMultiplayerTransport`, `NetworkingTransportAdapter` (Bridge zum Networking-Stack).
-- **src/OpenMotion.Core/Networking/*** (M5, Parallel-Agent Networking) — `ITransport`, `InMemoryTransport`+`TransportWire` (tick-basierte Latenz/Jitter, deterministisch), `Netcode` (Framing + DesyncReport), `P2PSession` (Transport + Frame-Verteilung).
-- **scripts/CameraController.cs** (M6.5) — Orbit-Kamera: Fokuspunkt + Yaw/Pitch/Distanz als einziger Zustand, Transform via LookAt; Orbit (rechte/mittlere Maustaste), Zoom (Rad), Pan (WASD/Pfeile, distanzproportional), Höhe (Q/E, Shift/Ctrl); 8 Input-Actions headless-prüfbar.
-- **scripts/HUD.cs + scenes/ui/HUD.tscn** (M6) — 7 Labels via Tr() aufgelöst (AutoTranslate=false), Refresh über `LocalizationManager.LanguageChanged`, F1-Toggle DE⇄EN.
-- **scripts/LocalizationManager.cs** (M6) — Autoload: deterministischer Default „de", `SetLanguage`/`CurrentLanguage`/`LanguageChanged`, .po-Nachladen als Fallback zur project.godot-Registrierung.
-- **scripts/MapRenderer.cs** (M6) — Rendert `Infrastructure` als BoxMesh-Primitive (Road/Rail/Path) + Haltestellen-Knoten (Scheibe + Mast); `Render()` idempotent, `Clear()`.
-- **scripts/SteamManager.cs** (M5) — SteamAPI.Init (App-ID 480), IsRunning/PlayerName statisch, DllImport-Resolver für steam_api64.dll, RunCallbacks pro Frame, Shutdown, alles try/catch (crash-sicher, headless-CI-tauglich).
-- **scripts/VehicleVisualizer.cs** (M6.5) — Instanziiert Bus/Tram/Metro-Szenen je `Vehicle.Type`, Linienfarbe aus `LinePalette` (8 Farben, GDD 10.1), `Refresh()` nach jedem Sim-Tick (Position + Yaw aus PositionAlongRoute interpoliert).
-- **docs/STEAMWORKS_SETUP_ANLEITUNG.md** (M5) — Laienverständliche Steamworks-Anmeldung (Partnerkonto, App-ID, SDK, Spacewar) mit Checkliste, Zeitaufwand, Kosten-Tabelle.
-- **export_presets.cfg** (M6.5) — Windows-Desktop-Preset: `build/openmotion_windows.exe`, x86_64, embed_pck, App-Icon `res://assets/logo/logo_clean.png`, Version 0.1.0.
-- **assets/logo/logo_clean.ico** (M6.5) — App-Icon (aus logo_clean.svg), für Windows-Export.
-- **src/OpenMotion.Core.Tests/MapTests.cs** (10 Tests), **MultiplayerSessionTests.cs** (12 Tests), **NetworkingTests.cs** (20 Tests), **NetworkingIntegrationTests.cs** (1 Test), **InMemoryTransport.cs** (Test-Double Hub/Transport) — siehe [[functions]].
+- **scripts/BuildingVisualizer.cs** (M6.6, Parallel-Agent Gebäude) — Rendert CityGrowth-Gebäude (GDD 4) als 3D-Quader unter der CityView: ein BoxMesh-Knoten je Building, sim X/Y → Godot X/Z (Y nach oben, Konvention wie MapRenderer/VehicleVisualizer); Höhe je Typ deterministisch aus 32-bit-FNV-1a-Hash der Building-Id (Residential 6–10, Commercial 12–20, Industrial 8–14 m), Farbe warm (Art-Richtung C: Beige/Terrakotta, Warmgrau, dunkles Warmgrau) mit 8 Helligkeits-Varianten (Faktor 0.90+0.025·Variante, Material-Cache pro (Typ, Variante)); Fensterband auf der +X-Fassade (0.14 m dick, 55 % Höhe, 72 % Breite). `Initialize(CityGrowthSystem)` registriert den Kern (nur Lesen); `Refresh()` (M6.6-Hook vom SimulationRunner nach jedem Sim-Tick) hängt NUR neue Gebäude inkrementell an (M6.6-Fix gegen O(n²) Voll-Rebuild, Gebäude unveränderlich — Anzahl-Änderung = Dirty-Signal), `BuildingNodeCount` als Headless-Nachweis.
+- **scripts/EnvironmentBuilder.cs** (M6.6, Parallel-Agent Umgebung) — Sichtbare Welt unter CityView (User-Feedback „nur Strassen-Kreuz auf leerem grauem Raum"): Boden 3000×3000 m in warmer Erdfarbe (Oberseite y = -0.02, kein Z-Fighting), Park (NO-Eck) + Teich (SW-Eck) als dezent-dokumentierte Akzente (kollisionsfrei gegen Karten-Geometrie X/Z ∈ [400,1600]); WorldEnvironment nur falls KEINES im Baum existiert (ProceduralSky pastell, Ambient aus Farbe 0.6, Tonemap Filmic — Godot 4 kennt keinen „Basic"-Modus); Sonne: vorhandene „Sun" warm justieren (Energie 1.15, warmweiss) oder anlegen. Deterministisch (feste Konstanten), `Build()` idempotent, reines Rendering.
+
+### Entfernt (1)
+
+- **assets/logo/logo_clean.ico** — App-Icon (aus logo_clean.svg konvertiert, M6.5); nicht mehr im Arbeitsbaum (war untracked, keine Git-Deletion sichtbar). export_presets.cfg referenziert weiterhin `res://assets/logo/logo_clean.png` (png bleibt im Repo).
+
