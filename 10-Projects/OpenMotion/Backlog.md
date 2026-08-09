@@ -42,6 +42,8 @@ status: active
 - [ ] P2 Modding-API (Workshop-Grundlage)
 
 ## Phase 3 — Release
+- [ ] P0 M8: Steam-Registrierung abschließen — **100-USD-Gebühr (Steam Direct) zahlen** (Pflichtschritt der Registrierung selbst; ohne Zahlung kein vollwertiges Partnerkonto), Identitätsprüfung (**2–7 Werktage**), Bankdaten + W-8BEN eintragen; **Valve-Prüfzeiten in M8-Planung einplanen** — siehe [[10-Projects/OpenMotion/Recht-Gruendung|Recht & Gründung]], [[50-Sessions/2026-08-09_Steamworks-Partnerkonto|Session Steamworks]]
+- [ ] P0 M8: Echter Steam-P2P-Test über zwei Rechner (erst nach vollständiger Registrierung möglich, Strategie Glieder 2026-08-09: komplett ohne Steam bis M7)
 - [ ] P0 Early Access Release (Steam Direct 100 $, Freigabe Glieder)
 - [ ] P1 Linux-Build validieren (Steam Machine / Proton-frei)
 - [ ] P1 Beta-Phase mit Testgruppe
@@ -56,4 +58,6 @@ status: active
 
 ## Verlinkungen
 - [[README|Projekt-README]]
+- [[10-Projects/OpenMotion/Recht-Gruendung|Recht & Gründung]]
+- [[50-Sessions/2026-08-09_Steamworks-Partnerkonto|Session 2026-08-09 — Steamworks-Partnerkonto]]
 - [[60-Decisions/ADR-005_OpenMotion|ADR-005 — Projektgründung]]

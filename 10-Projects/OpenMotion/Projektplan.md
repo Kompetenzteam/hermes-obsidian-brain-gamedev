@@ -46,7 +46,7 @@ OpenMotion ist ein Nahverkehrs-Simulator im Spielgefühl von Cities in Motion 2 
 | M5 | Steam Multiplayer | Steam Auth + Lobby + P2P, 2–8 Spieler, Desync-Tests grün |
 | M6 | City | Referenzkarte, 1 Stadt-Typ spielbar, UI komplett, i18n DE/EN |
 | M7 | Stabilisierung | 8-Spieler-Tests, Reconnect, Host-Migration, Performance |
-| M8 | Release-Vorbereitung | Early-Access-Entscheidung, Store-Assets, Linux-Build |
+| M8 | Release-Vorbereitung | Early-Access-Entscheidung, **Steam-Registrierung abschließen** (100-USD-Gebühr, Identitäts-/Steuerprüfung 2–7 Werktage — Valve-Prüfzeiten einplanen), Store-Assets, Linux-Build |
 
 ## 4. Rollen & Arbeitsweise
 | Rolle | Person |

@@ -18,6 +18,24 @@ Entscheidung: Einzelunternehmen (Glieder arbeitet allein, 2026-08-09, siehe [[60
 
 Details zur Durchführung: [[30-Resources/Steamworks-Setup-Anleitung|Steamworks-Setup-Anleitung]]. Session-Protokoll: [[50-Sessions/2026-08-09_Steamworks-Partnerkonto|Session 2026-08-09 — Steamworks-Partnerkonto]].
 
+### Update 2026-08-09: Faktenlage verifiziert — Strategie-Entscheidung Glieder
+
+**Verifiziert (offizielle Steamworks-Doku, „Anwendungen verwalten“ → FAQ):**
+- Die **Steam-Direct-Gebühr (100 USD ≈ 100 EUR) ist ein PFLICHTSCHRITT der Steamworks-Registrierung selbst** (Onboarding-Schritt „Pay the app deposit fee“) — **nicht** erst bei der App-Erstellung. Ohne Zahlung gibt es **kein vollwertiges Partnerkonto**: App-Auswahl/Suchfeld, Spacewar-Freischaltung und SDK-Download bleiben gesperrt.
+- Es gibt einen **eingeschränkten Steamworks-Account** (nur NDA + Kontaktdaten, kostenlos) — aber Valve warnt ausdrücklich: diese Variante **nicht** wählen, wenn Bank-/Steuerinfos für Auszahlungen angegeben werden sollen → **für OpenMotion ungeeignet** (Sackgasse, kein Upgrade).
+
+**Entscheidung (Glieder, 2026-08-09) — STRATEGIE:**
+- Spiel **komplett ohne Steam fertig entwickeln** (Meilensteine bis M7); Steam erst bei **M8** einbauen — bis dahin alles dafür nur vorbereiten.
+- **Partnerkonto bleibt unvollständig liegen — kein Schaden**, Fortschritt bleibt gespeichert.
+- **100-USD-Gebühr + vollständige Registrierung erst bei M8**: Identitätsprüfung (2–7 Werktage), Bankdaten, US-Steuerformular W-8BEN.
+- **Valve-Prüfzeiten werden in die M8-Planung eingeplant.**
+
+**Projektstatus Steam (Fakt, Stand 2026-08-09):**
+- **Steamworks.NET 2024.8.0 (SDK 1.60)** als NuGet-Paket im Repo `D:\Entwicklung\Projekte\OpenMotion`; native `steam_api64.dll` unter `libs/win-x64/`.
+- Steam-P2P hinter **ITransport-Abstraktion** gekapselt (`P2PSession.cs`, `NetworkingTransportAdapter.cs`) → Spiel läuft ohne Steam (InMemory-Transport, **206 Tests grün**).
+- `steam_appid.txt`-Dev-Ansatz (App-ID 480) vorhanden; echter Steam-P2P-Test über zwei Rechner erst nach vollständiger Registrierung möglich (**M8**).
+- → M8-Aufgaben: [[10-Projects/OpenMotion/Backlog|Backlog]] (Phase 3 — Release), [[10-Projects/OpenMotion/Projektplan|Projektplan]] (M8).
+
 ## Schritt 1 — Gewerbeanmeldung
 - Beim Gewerbeamt der Stadt (online oder vor Ort), Tätigkeit: "Entwicklung von Computerspielen"
 - Kosten: 20–60 €, Dauer: wenige Tage bis 2 Wochen → Gewerbeschein

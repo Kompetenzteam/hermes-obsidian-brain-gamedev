@@ -37,6 +37,7 @@ repo: D:\Entwicklung\Projekte\OpenMotion
 ## Abhängigkeiten
 - Steamworks SDK (kostenlos, Partnerkonto nötig) — **abgelegt unter `C:\Steamworks\sdk`** (2026-08-09, nicht im Repo)
 - Steam Direct 100 $ (vor Release, Freigabe nötig)
+- **Strategie (Glieder, 2026-08-09):** Spiel komplett ohne Steam bis M7 fertig entwickeln, Steam erst bei M8 einbauen; Partnerkonto bleibt bewusst unvollständig (kein Schaden), 100-USD-Gebühr + vollständige Registrierung (Identität 2–7 Werktage, Bankdaten, W-8BEN) erst bei M8 — Details: [[10-Projects/OpenMotion/Recht-Gruendung|Recht & Gründung]]
 
 ## Offene Tasks
 - [ ] **Freigabe Gesamtkonzept + Projektplan durch Glieder** ([[Gesamtkonzept|Gesamtkonzept]], [[Projektplan|Projektplan]])
@@ -55,6 +56,7 @@ repo: D:\Entwicklung\Projekte\OpenMotion
 - [[50-Sessions/2026-08-09_OpenMotion-M1-M3|2026-08-09 — M1–M3 (Boilerplate, Lockstep, Simulation, D2-Logo)]]
 - [[50-Sessions/2026-08-09_OpenMotion-M4-M5|2026-08-09 — M4–M5 (Vehicles, Steam Multiplayer)]]
 - [[50-Sessions/2026-08-09_OpenMotion-M6|2026-08-09 — M6 (City/UI, Referenzkarte, i18n)]]
+- [[50-Sessions/2026-08-09_Steamworks-Partnerkonto|2026-08-09 — Steamworks-Partnerkonto (Strategie: Steam erst bei M8)]]
 
 ## Entscheidungen
 - [[60-Decisions/ADR-005_OpenMotion|ADR-005 — Projektgründung]]
