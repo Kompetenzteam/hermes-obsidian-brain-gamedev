@@ -47,6 +47,7 @@ Glieder übernimmt die Rolle des Koordinators über parallele Agents und definie
 - **Projektstart-Protokoll (2026-08-09):** Bei jedem NEUEN Projekt User systematisch abfragen (Fragekatalog: `Templates/tpl-kickoff.md`), solange nachfragen bis ein gutes Projektbild vorliegt ODER der User eine umfassende Projektbeschreibung liefert. Erst danach Projekt anlegen (Vault-Struktur, ADR, README, Backlog).
 - **Freigabe-Pflicht (2026-08-09):** Nach dem Projekt-Ausfragen werden ZUERST **Gesamtkonzept** + **Projektplan** vorgelegt und vom User manuell freigegeben. Designentscheidungen (Art-Konzept, Logo, UI, Tech-Stack, Architektur) werden einzeln zur manuellen Freigabe vorgelegt. Nichts wird autonom umgesetzt — Freigabe ist harte Voraussetzung für den Arbeitsstart.
 - **Koordinator-Regel (2026-08-09):** Hermes arbeitet NIE selbst an Aufgaben — ALLE Aufgaben werden an Agents/Subagents delegiert. Hermes ist nur Koordinator: vergibt Arbeit, koordiniert, fragt Status ab, meldet alle 10 Minuten Status-Report an Glieder. Entscheidet immer im Sinne des Projekts.
+- **Agent-Parallelität (2026-08-09):** Bis zu **9 parallele Agents/Subagents** dürfen eingesetzt werden (User-Regel). `delegation.max_concurrent_children=9` ist in der Hermes-Konfiguration gesetzt (verifiziert). Koordinator nutzt volle Parallelität für Wellen.
 
 ### 🔐 Security-Regeln
 - **Niemals Credentials im Klartext im Code** (harte Regel, 2026-08-09)
