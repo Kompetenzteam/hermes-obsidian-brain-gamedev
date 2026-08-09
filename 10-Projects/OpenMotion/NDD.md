@@ -1,18 +1,19 @@
 ---
 tags: [project, design, networking]
 project: OpenMotion
-status: draft
+status: accepted
 date: 2026-08-09
-version: 0.1
+version: 0.2
+freigabe: "Freigabe Glieder 2026-08-09 (Netz-Entscheidungen Q1-Q5, inkl. Save & Resume)"
 ---
 
 # OpenMotion — Networking Design Document (NDD)
 
-> Status: **DRAFT — wartet auf manuelle Freigabe durch Glieder** (Freigabe-Regel ADR-004)
-> Version 0.1 · Datum 2026-08-09
+> Status: **FREIGEGEBEN (accepted)** — Freigabe durch Glieder am 2026-08-09 (Netz-Entscheidungen Q1–Q5, inkl. Save & Resume), Freigabe-Regel ADR-004
+> Version 0.2 · Datum 2026-08-09
 > Autor: Hermes (Senior Networking Specialist, Senior Lead Game Developer)
 > Zweck: legt Designentscheidung **D4 „Multiplayer-Architektur (Lockstep-Details)"** aus dem [[Projektplan]] zur Freigabe vor.
-> Konsistenz: baut auf [[Gesamtkonzept]] §3 (Multiplayer-Architektur), [[60-Decisions/ADR-005_OpenMotion|ADR-005]] und dem freigegebenen [[60-Decisions/ADR-006_OpenMotion-Tech-Stack|ADR-006]] auf. Keine widersprüchlichen Festlegungen; offene Punkte sind in §12 als **Offene Design-Frage** markiert.
+> Konsistenz: baut auf [[Gesamtkonzept]] §3 (Multiplayer-Architektur), [[60-Decisions/ADR-005_OpenMotion|ADR-005]] und dem freigegebenen [[60-Decisions/ADR-006_OpenMotion-Tech-Stack|ADR-006]] auf. Keine widersprüchlichen Festlegungen; alle Freigabe-Fragen Q1–Q5 sind entschieden (2026-08-09, Entscheider: Glieder), dokumentiert in §13.
 
 ---
 
@@ -59,7 +60,7 @@ Spielereingabe (lokal) → Input-Pipeline → Host (konsolidiert) → Broadcast 
 
 ### 2.1 Tick-Rate
 
-- **Kern-/Netz-Tick: 30 Ticks/s** (Baseline, entspricht ADR-006-Beispiel „z. B. 30 Ticks/s"). 20 Ticks/s (Gesamtkonzept-Beispiel) bleiben als dokumentierte Fallback-Konstante, falls das CPU-Budget in M7 es erfordert — **Freigabe-Frage §12/Q4**.
+- **Kern-/Netz-Tick: 30 Ticks/s — fest bestätigt (Entscheidung Q4, 2026-08-09, Entscheider: Glieder)**, konsistent mit ODF-1 (GDD). Kein Fallback auf 20 Ticks/s (Gesamtkonzept-Beispiel entfällt).
 - Die Tick-Rate ist eine **Build-Zeit-Konstante** (`SimTickRate`), niemals zur Laufzeit änderbar; sie wird im Handshake mitgeführt (Protokoll-Version).
 - **Rendering interpoliert** zwischen Ticks (nicht-deterministisch erlaubt, Standard in Sim-Spielen).
 - **SIM-Bewohner**: Agenten-Sub-Tick 10 Hz über einen deterministischen Scheduler (§7.2), Gesamtkonzept §2.2a.
@@ -108,7 +109,7 @@ public readonly struct InputCommand
 
 ### 2.4 Late-Join (Überblick)
 
-Ein beitretender Spieler erhält vom Host das **Eingabe-Log ab Tick 0** (bzw. ab dem letzten Log-Checkpoint), spielt die Simulation headless im Fast-Forward nach und tritt nach Hash-Verifikation live bei. **Kein Weltzustand wird übertragen** — der Tick-0-Zustand ist durch den Seed vollständig bestimmt (§5.4, §8.2). Detaillierte Ladezeit-Frage: §12/Q5.
+Ein beitretender Spieler erhält vom Host das **Eingabe-Log ab Tick 0** (bzw. ab dem letzten Log-Checkpoint), spielt die Simulation headless im Fast-Forward nach und tritt nach Hash-Verifikation live bei. **Kein Weltzustand wird übertragen** — der Tick-0-Zustand ist durch den Seed vollständig bestimmt (§5.4, §8.2). Die Ladezeit wird über Log-Checkpoints begrenzt (gleicher Mechanismus wie Save & Resume, §12).
 
 ---
 
@@ -227,8 +228,10 @@ Begründung:
 
 ### 5.2 Hash-Broadcast & Vergleich
 
-- Jeder Client berechnet pro Tick seinen `SimHash64`; **alle 10 Ticks** (≈ 3×/s) sendet er den Hash an den Host (`HashReport`).
+- Jeder Client berechnet pro Tick seinen `SimHash64`; **alle 10 Ticks** (≈ 3×/s) sendet er den **Ganzzustands-Hash** an den Host (`HashReport`) — **Standard bestätigt (Entscheidung Q5, 2026-08-09, Entscheider: Glieder)**.
+- **Per-Region-Hashes:** bei Hash-Abweichung (Desync-Verdacht) kann der Host zusätzlich **Per-Region-Hashes alle 10 Ticks** aktivieren (Regionen = deterministische Kartenaufteilung), um den abweichenden Bereich schnell zu lokalisieren (mehr CPU, gleiche Bandbreite) — nur bei Verdacht, nicht im Dauerbetrieb (Q5).
 - Host vergleicht die Hashs aller Clients pro Berichts-Tick. Abweichung → `DesyncReport` an alle + Log-Eintrag (Tick, betroffene Clients, erwarteter/aktueller Hash).
+- **Hash-Verifikation beim Resume:** Derselbe `SimHash64` sichert auch das Laden von Save-Dateien ab (Datei-Hash vs. lokal nachgerechneter Hash, §12.6) — Erweiterung aus Q2/Save & Resume.
 - Bandbreite: 8 B × 3/s × 8 Spieler ≈ 0,2 kbit/s — vernachlässigbar (§7.3).
 - Der Hash ist **deterministisch über Plattformen** — die CI vergleicht Windows- und Linux-Runner-Hashes (ADR-006, §11.1).
 
@@ -246,9 +249,9 @@ Begründung:
   1. Host sendet dem betroffenen Client das Eingabe-Log ab Tick 0 (bzw. ab letztem Checkpoint).
   2. Client spielt die Simulation **headless im Fast-Forward** nach (deterministisch, gleicher Seed → gleicher Zustand).
   3. Client verifiziert seinen `SimHash64` am aktuellen Tick gegen die Hashs der anderen Clients.
-  4. Bei Übereinstimmung: Wiedereinstieg über `ControlFrame PlayerJoined`; sonst zweiter Versuch → Eskalation (§12/Q3).
+  4. Bei Übereinstimmung: Wiedereinstieg über `ControlFrame PlayerJoined`; sonst zweiter Versuch → **Eskalation (Entscheidung Q3, 2026-08-09, Entscheider: Glieder): betroffenen Client trennen, die Partie läuft für die übrigen weiter**. Abbruch nur bei **Host-Desync** (→ Host-Migration, §6) oder wenn **> 50 % der Clients** desynct sind (§10, §13/Q3).
 - **Kein Zustand-Snapshot-Transfer:** Der Tick-0-Zustand ist durch den Seed vollständig bestimmt (§8.2), alles danach durch das Eingabe-Log. Damit bleibt „NIE Weltzustand" ausnahmslos gültig.
-- **Fast-Forward-Performance** (60-min-Session → Join-Zeit) ist eine Freigabe-Frage: §12/Q5.
+- **Fast-Forward-Performance** (60-min-Session → Join-Zeit) wird über **Log-Checkpoints** begrenzt — dieselbe Snapshot-/Checkpoint-Technik wie Save & Resume (§12); die Ladezeit ist damit Implementierungs-/Optimierungsthema, keine offene Design-Frage mehr.
 
 ---
 
@@ -286,8 +289,8 @@ Begründung:
 ### 7.2 SIM-Bewohner 10k+ & Agent-LOD
 
 - **Jeder Bewohner ist ein eigener Agent** mit festem deterministischem Seed (Gesamtkonzept §2.2a); Ziel **10.000+ Bewohner** auf Mid-Hardware.
-- **Agent-LOD (deterministisch):** volle Simulation in Spielernähe, entfernte Bereiche abstrahiert — **gleiche Ergebnisse durch deterministischen Scheduler**, nur weniger Detail-Ticks (Gesamtkonzept §2.2a). Konkrete Detailstufen/Radien sind Freigabe-Frage §12/Q1.
-- LOD-Wechsel dürfen **nur tick-basiert** erfolgen (deterministische Agenten-Positionen → deterministische LOD-Entscheidung); keine Echtzeit-/Frame-Zeit in der LOD-Logik.
+- **Agent-LOD (deterministisch, Entscheidung Q1, 2026-08-09, Entscheider: Glieder):** **3 Stufen** — (1) **voll: 30 Hz** in Spielernähe (~200 m), (2) **reduziert: 10 Hz** (~600 m), (3) **abstrakt: 2 Hz** in der Ferne. Gleiche Ergebnisse durch deterministischen Scheduler, nur weniger Detail-Ticks (Gesamtkonzept §2.2a).
+- **LOD-Grenzen/Wechsel ausschließlich tick-basiert** (deterministische Agenten-Positionen → deterministische LOD-Entscheidung an Tick-Grenzen); keine Echtzeit-/Frame-Zeit in der LOD-Logik (Q1).
 - Performance: `struct`-Agenten, keine Allokationen im Tick, Sub-Tick 10 Hz (§2.1). Agenten werden **nie** über das Netz übertragen.
 
 ### 7.3 Bandbreiten-Budget
@@ -325,13 +328,13 @@ Create Lobby → Join (Metadaten/Version prüfen) → ReadyUp (alle bereit)
 ### 8.3 Pause (deterministisch)
 
 - **Pause ist ein Sim-Ereignis:** `Pause`/`Resume` sind Control-Frames an einem konkreten Tick; alle Clients stoppen/fahren am selben Tick fort (kein Tick läuft weiter, kein Zustand driftet).
-- Pause bei Spielerabfall: Host injiziert `PlayerDisconnected` am aktuellen Tick; die Session pausiert gemäß Reconnect-Politik (§12/Q2), bis der Spieler zurück ist (Resync, §5.4) oder die Session ohne ihn fortgesetzt wird.
+- Pause bei Spielerabfall: Host injiziert `PlayerDisconnected` am aktuellen Tick; die Session pausiert gemäß Reconnect-Politik (**Entscheidung Q2, 2026-08-09, Glieder: 60-s-Fenster, Pause während des Fensters**), bis der Spieler zurück ist (Resync, §5.4) oder die Session nach Ablauf ohne ihn fortgesetzt wird (keine KI-Übernahme im MVP). Während der Pause kann der Host jederzeit speichern (§12.3).
 
 ### 8.4 Leave/Timeout/Spielerabfall
 
 - **Sauberer Leave:** `ControlFrame PlayerLeft` → Sim verarbeitet das Ausscheiden deterministisch: Linien/Fahrzeuge des Spielers laufen mit dem letzten Fahrplan weiter (keine KI im MVP — bewusste Nicht-Zielsetzung), sein Budget wird eingefroren; die Welt bleibt synchron.
 - **Timeout/Absturz:** erkannt über Heartbeat (10.2) → wie Spielerabfall behandelt; bei Host → Host-Migration (§6).
-- **Reconnect:** innerhalb des Reconnect-Fensters via Resync (§5.4); danach gilt der Spieler als ausgeschieden (Partie läuft weiter) — Freigabe-Frage §12/Q2.
+- **Reconnect:** innerhalb des **60-s-Reconnect-Fensters** via Resync (§5.4); danach gilt der Spieler als ausgeschieden und die Partie läuft **ohne KI-Übernahme** weiter (Entscheidung Q2, 2026-08-09, Entscheider: Glieder).
 
 ---
 
@@ -365,8 +368,8 @@ Create Lobby → Join (Metadaten/Version prüfen) → ReadyUp (alle bereit)
 | Paketverlust | Reliable-Channel-Nachlieferung (Steam) | Verzögerung → Jitter-Puffer/Stall (§2.3); kein Zustandsverlust |
 | Jitter/Reordering | Steam reliable ordered | Puffer 2–3 Ticks; `FrameSeq`-Schutz |
 | Verbindungs-Timeouts | Heartbeat (2 s, 3× ausbleiben → Timeout) | Spielerabfall (§8.4); bei Host → Migration (§6) |
-| Client-Absturz | Timeout + ggf. Steam-Disconnect-Event | Spielerabfall; Reconnect-Fenster (§12/Q2) |
-| Desync (Hash-Abweichung) | `HashReport`-Vergleich (§5.2) | Auto-Resync-Versuch (§5.4); Eskalation §12/Q3 |
+| Client-Absturz | Timeout + ggf. Steam-Disconnect-Event | Spielerabfall; Reconnect-Fenster 60 s (Q2) |
+| Desync (Hash-Abweichung) | `HashReport`-Vergleich (§5.2) | Auto-Resync-Versuch (§5.4); bei Misserfolg Client trennen, Partie läuft weiter; Abbruch nur bei Host-Desync oder >50 % (Q3) |
 | Split-Brain (zwei „Hosts") | — (konstruktiv ausgeschlossen) | Deterministische Host-Wahl über SteamID (§6.2) |
 | Inkompatible Version | Handshake (§4.3) | Join-Ablehnung mit klarer i18n-Meldung |
 
@@ -381,7 +384,7 @@ Create Lobby → Join (Metadaten/Version prüfen) → ReadyUp (alle bereit)
 
 ### 10.3 Reconnect-Fenster
 
-- Während des Reconnect-Fensters pausiert die Session (§8.3); der Spieler kehrt per Resync zurück (§5.4). Dauer/Politik: Freigabe-Frage §12/Q2.
+- **Reconnect-Fenster: 60 s** (Entscheidung Q2, 2026-08-09, Entscheider: Glieder). Während des Fensters pausiert die Session (§8.3); der Spieler kehrt per Resync zurück (§5.4). Nach Ablauf wird die Session ohne den Spieler fortgesetzt (keine KI-Übernahme im MVP). Ein „Save & Resume" während des Fensters ist möglich (§12.3).
 
 ### 10.4 Absturz eines Clients
 
@@ -427,15 +430,84 @@ TDD-Pflicht und „keine Platzhalter" (ADR-004): Alle hier genannten Tests sind 
 
 ---
 
-## 12. Offene Design-Fragen (Freigabe-Runde)
+## 12. Save & Resume (Session-Persistenz)
 
-Konkrete, entscheidbare Fragen — **keine erfundenen Festlegungen**:
+*Entscheidung Q2-Erweiterung, 2026-08-09, Entscheider: Glieder — eine laufende Session muss speicherbar sein, sodass das Spiel gespeichert und **später** fortgesetzt werden kann.*
 
-1. **Agent-LOD-Konfiguration:** Welche Detailstufen/Radien und Sub-Tick-Raten (Vorschlag: 3 Stufen — voll 30 Hz in Spielernähe / reduziert 10 Hz / abstrakt 2 Hz in der Ferne; Grenzen tick-basiert)? Deterministischer Scheduler ist fix (Gesamtkonzept §2.2a), die konkreten Parameter sind offen.
-2. **Reconnect- & Pause-Politik:** Reconnect-Fenster-Dauer (Vorschlag: 60 s), automatisches Pausieren bei Spielerabfall (Vorschlag: ja, während des Fensters), und Fortsetzen ohne den Spieler danach (Vorschlag: ja, ohne KI-Übernahme im MVP)?
-3. **Desync-Eskalation:** Bei anhaltendem Desync nach Auto-Resync-Versuch — betroffenen Client trennen und Partie weiterlaufen lassen (Vorschlag) oder Partie abbrechen?
-4. **Tick-Rate final:** 30 Ticks/s als feste Konstante bestätigen (ADR-006-Baseline) oder 20 Ticks/s (Gesamtkonzept-Beispiel) — Agenten-Sub-Tick bleibt 10 Hz?
-5. **Hash-Umfang/-Intervall:** Ganzzustands-Hash alle 10 Ticks als Standard bestätigen, oder Hash pro Tick, oder zusätzlich per-Region-Hashes zur schnelleren Desync-Lokalisierung (mehr CPU, gleiche Bandbreite)?
+### 12.1 Ziel & Prinzip
+
+- Die Session wird als **Save-Datei** persistiert und kann **zu einem späteren Zeitpunkt** (neue Laufzeit, ggf. anderer Rechner/andere Session) exakt dort fortgesetzt werden, wo sie unterbrochen wurde.
+- Lockstep-treues Prinzip: Die Save-Datei enthält **keine** „fertige Welt", sondern (a) den **deterministischen Zustands-Snapshot** und (b) das **Eingabe-Log (Replay)** — beide zusammen machen die Fortsetzung deterministisch und verifizierbar.
+- Save & Resume ist die **Verallgemeinerung des Checkpoint-/Late-Join-Mechanismus** (§5.4): Ein Resume ist formal ein Late-Join mit lokalem Zustand statt Replay-ab-Tick-0.
+
+### 12.2 Persistenz-Format (SQLite, ADR-006)
+
+Eine Save-Datei = **eine SQLite-Datei** (ADR-006: SQLite für lokale Persistenz) mit zwei logischen Bereichen:
+
+1. **Zustand (State-Snapshot):**
+   - Header: `SaveFormatVersion`, `ProtocolVersion`, `SimTickRate` (beim Laden hart geprüft, §12.7),
+   - **Tick-Nummer** des Save-Zeitpunkts (Resume-Tick T\*),
+   - **Master-Seed** (und daraus deterministisch abgeleitete Seeds, §3.2/§8.2) — der Tick-0-Zustand ist dadurch vollständig bestimmt,
+   - **Sim-State als deterministischer Snapshot**: binär, Little-Endian, feste Layouts (deterministische Serialisierung, §3.5) — Sim-Zustand inkl. RNG-Zustand (gehört zum Sim-Zustand, §3.2),
+   - **`SimHash64` des gespeicherten Zustands** (Verifikation, §12.6).
+2. **Eingabe-Log (Replay):** vollständige, geordnete Eingabe-Sequenz inkl. Control-Frames **ab Tick 0 bzw. ab dem letzten Checkpoint** (identisch mit dem Replay-Log aus §5.3).
+
+### 12.3 Wann gespeichert wird
+
+- **Jederzeit durch den Host** über das Menü („Spiel speichern", i18n DE/EN): Der Host besitzt das Eingabe-Log-Archiv (§1.3) und erzeugt den Snapshot deterministisch — alle Clients haben denselben bit-identischen Zustand (§3), der Host speichert seinen lokalen Zustand.
+- **Auto-Save bei Host-Migration** (§6): Vor/beim Rollenwechsel wird der Stand gesichert, damit die Partie bei späteren Problemen aus der Save-Datei fortsetzbar ist.
+- **Bei geplantem Ende** („Save & Quit"): automatischer Save am letzten verarbeiteten Tick, optional ergänzt um den JSON-Replay-Export (§3.5).
+
+### 12.4 Fortsetzen (Resume)
+
+- **Laden:** Datei auswählen („Spiel fortsetzen", i18n DE/EN) → Header prüfen (§12.7) → **Hash-Verifikation** (§12.6) → erst dann Start.
+- **Zwei Resume-Modi:**
+  1. **Replay-Modus:** Simulation **ab Tick 0 (bzw. ab letztem Checkpoint) deterministisch nachspielen** aus dem Eingabe-Log (gleicher Seed → gleicher Zustand) — kein Snapshot nötig; danach Übergang in den Live-Betrieb.
+  2. **Snapshot-Modus:** direkt **vom gespeicherten Zustand starten** (Tick T\*); das Eingabe-Log dient ab T\* als laufende Aufzeichnung.
+- **Beide Modi enden mit Hash-Verifikation** (Erweiterung Q2: Hash-/Replay-Konsistenz **auch beim Laden** sicherstellen): der lokal nachgerechnete `SimHash64` am Resume-Tick muss mit dem in der Datei gespeicherten Hash übereinstimmen. Abweichung → **kein Resume**, klare i18n-Fehlermeldung (§12.6).
+- Resume ist ein **Host-gesteuerter Vorgang**: Alle Clients laden dieselbe Datei bzw. erhalten vom Host denselben Snapshot/Log-Stand. Es gilt weiterhin **kein Weltzustand-Transfer über das Netz** — die Save-Datei ist Datei-/Archiv-Semantik (§12.2), der Sim-Zustand entsteht auf jedem Client lokal deterministisch.
+
+### 12.5 Multiplayer-Besonderheit
+
+- Die Save-Datei enthält die **Session-Konfiguration**: Spielerliste (SteamIDs), `PlayerId`-Sitzordnung, Seeds, Gamemode, `SimTickRate`, `ProtocolVersion` (§4.1).
+- **Entscheidung (2026-08-09, Glieder): Fortsetzen mit gleicher Lobby-Struktur ist Standard und empfohlen** — gleiche Spieler, gleiche Sitzordnung → identische deterministische Zuordnung, kein Eingriff in die Sitzordnung (§7.1).
+- **Neue Spieler treten als Late-Join bei** (§5.4): Sie sind nicht Teil der gespeicherten Spielerliste, spielen die Simulation ab dem Checkpoint nach und joinen live am aktuellen Tick; ihre historischen Eingaben sind deterministisch leer (leerer Frame = explizite Absichtserklärung, §2.2).
+- **Abwesende Spieler beim Resume:** `PlayerId`s bleiben stabil; abwesende Spieler liefern deterministisch leere Frames (wie §2.2/§8.4), bis sie per Reconnect/Late-Join zurückkehren.
+- Abweichende Spielerliste (z. B. Ersatzspieler) nur mit **expliziter Bestätigung des Hosts**; die deterministische Sitzordnung (§7.1) bleibt maßgeblich.
+
+### 12.6 Integrität & Checksummen
+
+- **Datei-Integrität:** **SHA-256**-Checksumme über die gesamte Save-Datei (Erkennung von Korruption/Manipulation beim Laden).
+- **Sim-Konsistenz:** `SimHash64` des Zustands-Snapshots (§12.2) — beim Resume gegen den lokal berechneten Hash geprüft (§12.4).
+- **Prüfablauf beim Laden:** (1) Header/Format-Version prüfen → (2) SHA-256 der Datei prüfen → (3) Zustand laden bzw. Replay nachspielen → (4) `SimHash64`-Abgleich am Resume-Tick → erst dann Freigabe für den Live-Betrieb. Jede Stufe schlägt fehl → **kein Resume**, i18n-Fehlermeldung (DE/EN), Log-Eintrag.
+
+### 12.7 Speicherformat-Versionierung
+
+- `SaveFormatVersion` ist Teil des Datei-Headers und wird **hart geprüft**: inkompatible Version → Laden abgelehnt mit klarer i18n-Meldung (analog `ProtocolVersion`-Handshake, §4.3).
+- Zusätzlich werden `ProtocolVersion` und `SimTickRate` in der Datei geführt und beim Laden geprüft (Abweichung → Ablehnung; Desync-Schutz durch Versions-Mismatch, §3.5).
+- Save-Migration älterer Formate: **nicht im MVP** (nur Ablehnung + Hinweis), optional Phase 2.
+
+### 12.8 i18n
+
+- Die Simulations-/Netz-Schicht enthält **keine UI-Texte** (i18n dort nicht relevant).
+- Alle **Save-/Load-Menü-Texte** („Spiel speichern", „Spiel fortsetzen", „Speichern nicht möglich", „Save-Datei beschädigt", „Inkompatible Version") laufen über das i18n-System **DE/EN** (ADR-004, hartes Gate) — keine hardcodierten Strings.
+
+### 12.9 Verhältnis zu Replay/Resync & Tests
+
+- Das Eingabe-Log der Save-Datei ist **dasselbe Log** wie in §5.3; Save & Resume teilt sich die Infrastruktur mit Late-Join/Resync (Checkpoints, Hash-Verifikation).
+- **Neue CI-Tests (§11):** Save→Load-Roundtrip (speichern bei Tick T, laden, N Ticks weiterspielen → identischer `SimHash64` wie ohne Save/Load), Korruptions-Test (beschädigte SHA-256 → Ablehnung), Versions-Test (inkompatible `SaveFormatVersion` → Ablehnung), N-Client-Resume (§11.2: alle Clients laden denselben Save → identische Hashs).
+
+---
+
+## 13. Offene Design-Fragen (Freigabe-Runde Q1–Q5)
+
+Alle Fragen dieser Runde sind **ENTSCHEIDEN** (2026-08-09, Entscheider: Glieder) und in den jeweiligen Abschnitten eingearbeitet:
+
+1. **Agent-LOD-Konfiguration — ENTSCHIEDEN (2026-08-09, Entscheider: Glieder):** 3 Stufen (voll 30 Hz in Spielernähe ~200 m / reduziert 10 Hz ~600 m / abstrakt 2 Hz Ferne), Grenzen tick-basiert → §7.2.
+2. **Reconnect- & Pause-Politik — ENTSCHIEDEN (2026-08-09, Entscheider: Glieder):** Reconnect-Fenster 60 s, Pause während des Fensters, danach Fortsetzen ohne KI-Übernahme → §8.3/§8.4/§10.3. **Erweiterung beschlossen:** Save & Resume (Session-Persistenz) → §12.
+3. **Desync-Eskalation — ENTSCHIEDEN (2026-08-09, Entscheider: Glieder):** betroffenen Client trennen, Partie läuft weiter; Abbruch nur bei Host-Desync (→ Host-Migration) oder >50 % desyncte Clients → §5.4/§10.
+4. **Tick-Rate final — ENTSCHIEDEN (2026-08-09, Entscheider: Glieder):** 30 Ticks/s fest (konsistent mit ODF-1/GDD); Agenten-Sub-Tick bleibt 10 Hz → §2.1.
+5. **Hash-Umfang/-Intervall — ENTSCHIEDEN (2026-08-09, Entscheider: Glieder):** Ganzzustands-Hash alle 10 Ticks als Standard; Per-Region-Hashes alle 10 Ticks nur bei Verdacht aktivierbar; Hash-Verifikation auch beim Laden von Save-Dateien (Q2-Erweiterung) → §5.2/§12.6.
 
 ---
 

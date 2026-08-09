@@ -43,9 +43,11 @@ repo: D:\Entwicklung\Projekte\OpenMotion
 - [ ] Art-Konzept definieren (Lead Gamedesigner) — **wartet auf Freigabe D1**
 - [ ] Logo entwickeln (Lead Gamedesigner)
 - [ ] ADR-006 Tech-Stack
-- [x] GDD freigegeben — [[GDD|GDD]] (v0.2, Freigabe Glieder 2026-08-09)
-- [ ] NDD (Networking Design Document)
+- [ ] GDD (Game Design Document)
 - [ ] Backlog: [[Backlog|Backlog]]
+
+## Design-Dokumente
+- [[NDD|NDD]] — Networking Design Document, **freigegeben** (v0.2, Netz-Entscheidungen Q1–Q5 inkl. Save & Resume, Glieder 2026-08-09)
 
 ## Session-Log
 - [[50-Sessions/2026-08-09_OpenMotion-Kickoff|2026-08-09 — Kickoff]]
