@@ -2,7 +2,7 @@
 tags: [index, openmotion]
 created: 2026-08-09
 updated: 2026-08-09
-last_scan: 2026-08-09T16:08:20+02:00
+last_scan: 2026-08-09T17:17:14+02:00
 project: OpenMotion
 ---
 
@@ -16,26 +16,26 @@ Nahverkehrs-Simulator (Godot 4.7.1 .NET/C#, desync-freier Lockstep-Multiplayer, 
 
 ## Scan-Statistik
 
-- **Scan-Zeitpunkt:** 2026-08-09T16:08:20+02:00
-- **Scan-Typ:** Inkrementeller Scan (letzter Scan: 2026-08-09T15:10:08+02:00, Hybrid-Strategie)
+- **Scan-Zeitpunkt:** 2026-08-09T17:17:14+02:00
+- **Scan-Typ:** Inkrementeller Scan (letzter Scan: 2026-08-09T16:08:20+02:00, Hybrid-Strategie)
 - **Dateien gesamt (`files_total`):** 123 (find nach Exclusions)
 - **Neue Dateien (`files_new`):** 0
-- **Geänderte Dateien (`files_changed`):** 5 (CHANGELOG.md, KNOWN_ISSUES.md, scripts/BuildingVisualizer.cs, src/OpenMotion.Core/City/CityGrowthSystem.cs, src/OpenMotion.Core.Tests/CityGrowthTests.cs)
-- **Entfernte Dateien (`files_removed`):** 0 (assets/logo/logo_clean.ico war bereits im vorherigen Scan als entfernt markiert und ist weiterhin nicht im Arbeitsbaum)
-- **Indexierte Funktionen/Klassen/Methoden (`functions_indexed`):** 501 (vorher 490; +11: BuildingVisualizer +8 [GrowCapacity, AppendInstances, RebuildAll, ApplyInstance, MakeTransform, VerifyOldInstancePreserved, LogUpdate + Puffer-Konstanten-Zeile], CityGrowthTests +2 [Buildings_MinDistanceToRoadAxis_AtLeast4Meters, Growth_After300Ticks_IsBoundedAndStillGrowing], CityGrowthSystem +1 [BALANCE-Parameter-Zeile])
-- **Abhängigkeiten (`dependencies_indexed`):** 111 Tabellenzeilen (Methode: alle `| `-Zeilen inkl. Tabellen-Header + Kernmodule; vorher 106 — keine Zeilen hinzugefügt/entfernt, 3 Tabellenzeilen + 2 Kernmodule aktualisiert, +5 neue Impact-Map-Einträge)
-- **Scan-Dauer:** ca. 2 Minuten (Dateiliste, Git-Status + mtime-Vergleich, Diff-Analyse der 5 geänderten Dateien, 4 Index-Dateien aktualisiert)
+- **Geänderte Dateien (`files_changed`):** 0 (keine mtime-Änderung > last_scan, git status sauber — kein Dateiinhalt seit dem letzten Scan geändert)
+- **Entfernte Dateien (`files_removed`):** 0 (assets/logo/logo_clean.ico bleibt aus früheren Scans als entfernt markiert und ist weiterhin nicht im Arbeitsbaum — keine NEUEN Entfernungen)
+- **Indexierte Funktionen/Klassen/Methoden (`functions_indexed`):** 501 (unverändert zum letzten Scan)
+- **Abhängigkeiten (`dependencies_indexed`):** 111 Tabellenzeilen (Methode: alle `| `-Zeilen inkl. Tabellen-Header + Kernmodule; unverändert zum letzten Scan)
+- **Scan-Dauer:** ca. 1 Minute (Dateiliste, Git-Status + mtime-Vergleich, 4 Index-Dateien aktualisiert)
 
 ## Letzte Änderungen
 
-*Letzter Scan: 2026-08-09 16:08. Git-Arbeitsbaum sauber — 2 neue Commits seit dem letzten Scan (Fix/Balance + Doku).*
+*Letzter Scan: 2026-08-09 17:17. Keine neuen Commits/Änderungen seit dem letzten Scan — HEAD unverändert a3d8da5, Git-Arbeitsbaum sauber.*
 
 | Zeitstempel (Git) | Datei |
 |-------------------|-------|
 | 2026-08-09 15:39 (Commit a3d8da5, HEAD) | fix(M6.7): Gebäude-Abstand ≥10 m zur Straßenachse (Setback, Stop-Exklusivität), CityGrowth-Drossel (0-2/Tick, Deckel 2000 → 815 statt 12.850), MultiMesh inkrementell (nur neue Instanzen) — 221 Tests grün (CHANGELOG.md, BuildingVisualizer.cs, CityGrowthSystem.cs, CityGrowthTests.cs) |
 | 2026-08-09 15:15 (Commit 587a421) | docs: KNOWN_ISSUES — Export-Löschung nötig, Headless-FPS nicht aussagekräftig, CityGrowth-Balancing offen (KNOWN_ISSUES.md) |
-| 2026-08-09 (Commit 2908d89) | chore: Temp-Artefakte aufgeräumt (im letzten Scan dokumentiert) |
-| 2026-08-09 (Commit 7a2ab5c) | perf(M6.7): CityGrowth Spatial-Hash (309→3020 ms → ~44 ms/Tick), GPU-Instancing, Throttling, PerfMonitor — 219 Tests grün (im letzten Scan dokumentiert) |
+| 2026-08-09 (Commit 2908d89) | chore: Temp-Artefakte aufgeräumt (im vorherigen Scan dokumentiert) |
+| 2026-08-09 (Commit 7a2ab5c) | perf(M6.7): CityGrowth Spatial-Hash (309→3020 ms → ~44 ms/Tick), GPU-Instancing, Throttling, PerfMonitor — 219 Tests grün (im vorherigen Scan dokumentiert) |
 
 Git-Log (Stand Scan): `a3d8da5 fix(M6.7): Gebaeude-Abstand ≥10m zur Strassenachse (Setback, Stop-Exklusivitaet), CityGrowth-Drossel (0-2/Tick, Deckel 2000 → 815 statt 12.850), MultiMesh inkrementell (nur neue Instanzen) — 221 Tests gruen`; `587a421 docs: KNOWN_ISSUES — Export-Loeschung noetig, Headless-FPS nicht aussagekraeftig, CityGrowth-Balancing offen`; `2908d89 chore: Temp-Artefakte aufgeraeumt`; `7a2ab5c perf(M6.7): CityGrowth Spatial-Hash (309→3020ms → ~44ms/Tick), GPU-Instancing, Throttling, PerfMonitor — 219 Tests gruen`.
 
