@@ -28,6 +28,7 @@ summary: Neue harte Regel von Glieder: Brain-Doku-Pflicht (Jede Änderung/Entsch
 3. **LessonsLearned.md** (`30-Resources/LessonsLearned.md`): neu angelegt, initial mit 6 verifizierten Einträgen (Windows-Tooling, search_files/MSYS, sync-brain untracked, Assets/Bilder, vtracer-Logo, Steam-Gebühr) ✅
 4. **Index.md:** Session + Ressource verlinkt ✅
 5. **GitHub-Sync:** `sync-brain.sh` ausgeführt ✅
+6. **Skill-Update:** `obsidian-brain-protocol` gepatcht — LessonsLearned-Pflicht + Historie/Datum/Entscheidungsgrund als verbindlicher Workflow-Schritt ✅
 
 ## Verlinkungen
 - [[30-Resources/LessonsLearned|Lessons Learned — Fehler & Lösungen]]
