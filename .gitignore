@@ -1,0 +1,21 @@
+# Secrets & Credentials
+*.env
+.env*
+*.pem
+*.key
+*.pfx
+*.p12
+id_rsa*
+id_ed25519*
+*.token
+credentials*
+
+# Obsidian lokal
+.obsidian/workspace*
+.obsidian/cache
+.trash/
+
+# OS/Editor
+Thumbs.db
+.DS_Store
+*.swp

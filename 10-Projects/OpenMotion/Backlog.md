@@ -1,0 +1,56 @@
+---
+tags: [project, backlog]
+project: OpenMotion
+status: active
+---
+# OpenMotion — Backlog
+
+> Prioritäten: P0 = kritisch (Release-Blocker), P1 = wichtig, P2 = nice-to-have.
+> Reihenfolge = Priorität, dann Eingangsreihenfolge.
+
+## Phase 0 — Konzeption
+- [ ] P0 ~~Art-Konzept definieren~~ ✅ entschieden (Richtung C)
+- [ ] P0 ~~Logo entwickeln~~ ⏸️ zurückgestellt (DEV-001), wird später wieder aufgenommen
+- [ ] P0 ADR-006 Tech-Stack entscheiden (nächster Freigabepunkt)
+- [ ] P0 GDD (Game Design Document) schreiben
+- [ ] P0 NDD (Networking Design Document) schreiben — Lockstep-Architektur
+- [ ] P1 Projekt-Boilerplate (Repo-Struktur, CI, Linter, i18n-Gerüst)
+
+## Phase 1 — MVP (Release-Blocker)
+- [ ] P0 Multiplayer-Kern: Deterministic Lockstep (Eingaben, Snapshots, Reconnect)
+- [ ] P0 Kern-Wirtschaftssimulation (Budget, Passagierströme, Tarife)
+- [ ] P0 Linienplanung (Haltestellen, Routen, Fahrpläne)
+- [ ] P0 Verkehrsmittel: Bus
+- [ ] P0 Verkehrsmittel: Tram
+- [ ] P0 Verkehrsmittel: U-Bahn
+- [ ] P0 1 Stadt-Typ (Referenzkarte)
+- [ ] P0 Steam-Anbindung: Auth + Lobby (P2P)
+- [ ] P1 Multiplayer 2–8 Spieler stabil (Desync-Tests, Replay-Validierung)
+- [ ] P1 Host-Migration bei Host-Ausfall
+- [ ] P1 Steam Achievements (Basis-Set)
+- [ ] P1 i18n DE/EN komplett
+
+## Phase 2 — Post-MVP
+- [ ] P1 Prozeduraler Mapgenerator (seeded, deterministisch über Clients) — generiert Karte **+ Stadt zum Spielen**; Stadt wächst dynamisch entlang der gebauten Transportwege (Straßen/Schienen/Gehwege), Gebäude entstehen automatisch an der Infrastruktur (2026-08-09, Anforderung Glieder)
+- [ ] P1 SteamWorkshop (Maps, Mods, Inhalte)
+- [ ] P1 Verkehrsmittel: Fähre
+- [ ] P2 Verkehrsmittel: Seilbahn, Oberleitungsbus
+- [ ] P2 Tageszeit-/Wetter-System
+- [ ] P2 Modding-API (Workshop-Grundlage)
+
+## Phase 3 — Release
+- [ ] P0 Early Access Release (Steam Direct 100 $, Freigabe Glieder)
+- [ ] P1 Linux-Build validieren (Steam Machine / Proton-frei)
+- [ ] P1 Beta-Phase mit Testgruppe
+- [ ] P2 Marketing-Material (Store-Seite, Trailer, Screenshots)
+
+## Ideen / Backlog-Pool
+- [ ] Replay-System (Zuschauer-Modus)
+- [ ] KI-Verkehr / Fußgänger-Simulation (Detailgrad je nach Leistung)
+- [ ] Wirtschafts-Szenarien / Kampagnen
+- [ ] Map-Editor (in-game) als Workshop-Pipeline
+- [ ] Soundtrack (lizenzfrei oder Eigenproduktion)
+
+## Verlinkungen
+- [[README|Projekt-README]]
+- [[60-Decisions/ADR-005_OpenMotion|ADR-005 — Projektgründung]]
