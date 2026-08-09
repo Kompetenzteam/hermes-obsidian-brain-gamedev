@@ -1,0 +1,2 @@
+# Shell-Skripte immer mit LF (Shebang-Kompatibilität unter git-bash)
+*.sh text eol=lf
