@@ -17,12 +17,11 @@ status: active
 - [x] P1 Projekt-Boilerplate ✅ (M1: Godot-Scaffold, CI, i18n) — M2 Lockstep-Kern ✅ (42 Tests)
 
 ## Phase 1 — MVP (Release-Blocker)
-- [ ] P0 Multiplayer-Kern: Deterministic Lockstep (Eingaben, Snapshots, Reconnect)
-- [ ] P0 Kern-Wirtschaftssimulation (Budget, Passagierströme, Tarife)
-- [ ] P0 Linienplanung (Haltestellen, Routen, Fahrpläne)
-- [ ] P0 Verkehrsmittel: Bus
-- [ ] P0 Verkehrsmittel: Tram
-- [ ] P0 Verkehrsmittel: U-Bahn
+- [x] M2 Multiplayer-Kern: Lockstep ✅ (Input/Replay/TickHash/Session, 42 Tests)
+- [x] M3 Simulation ✅ — Economy (Budget/Subventionen/Kredite), Transit (Bus/Tram/Metro), Citizens (Routing Reisezeit+Preis), City-Growth (entlang Transportwegen), Orchestrator (Hash alle 10 Ticks), Serialization/Replay-Export — **147 Tests grün**
+- [ ] P0 Kern-Wirtschaftssimulation (Budget, Passagierströme, Tarife) — integriert, UI-Anbindung offen
+- [ ] P0 Linienplanung (Haltestellen, Routen, Fahrpläne) — Kern fertig, UI offen
+- [ ] P0 Verkehrsmittel: Bus / Tram / U-Bahn — Datenmodell fertig, Rendering offen (M4)
 - [ ] P0 1 Stadt-Typ (Referenzkarte)
 - [ ] P0 Steam-Anbindung: Auth + Lobby (P2P)
 - [ ] P1 Multiplayer 2–8 Spieler stabil (Desync-Tests, Replay-Validierung)
