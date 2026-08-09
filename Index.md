@@ -12,6 +12,7 @@ updated: 2026-08-09
 ## 📋 Projekte
 - [[10-Projects/OpenMotion/README|OpenMotion]] — Nahverkehrs-Simulator (CIM2-Geist, desync-freier Multiplayer, Steam)
   - [[10-Projects/OpenMotion/Index/index|OpenMotion-Index]] — Code-Index (stündlich aktualisiert, ADR-007)
+  - [[10-Projects/OpenMotion/Recht-Gruendung|Recht & Gründung]] — Checkliste Steam-Veröffentlichung
 
 ## 📝 Sessions
 - [[50-Sessions/2026-07-17_Hermes-Brain-Setup|2026-07-17 — Hermes Brain Setup]]
@@ -21,6 +22,7 @@ updated: 2026-08-09
 - [[50-Sessions/2026-08-09_OpenMotion-Kickoff|2026-08-09 — OpenMotion Kickoff]]
 - [[50-Sessions/2026-08-09_OpenMotion-M1-M3|2026-08-09 — OpenMotion M1–M3]]
 - [[50-Sessions/2026-08-09_Projekt-Index-Cronjob|2026-08-09 — Projekt-Index-Cronjob]]
+- [[50-Sessions/2026-08-09_Rechtsform-Gruendung|2026-08-09 — Rechtsform & Gründung]]
 
 ## 🎯 Entscheidungen (ADR)
 - [[60-Decisions/ADR-001_Tech-Stack|ADR-001 — Tech Stack]]
@@ -29,6 +31,7 @@ updated: 2026-08-09
 - [[60-Decisions/ADR-005_OpenMotion|ADR-005 — OpenMotion Projektgründung]]
 - [[60-Decisions/ADR-006_OpenMotion-Tech-Stack|ADR-006 — OpenMotion Tech-Stack]]
 - [[60-Decisions/ADR-007_Projekt-Index|ADR-007 — Projekt-Index-Infrastruktur]]
+- [[60-Decisions/ADR-008_Rechtsform-Einzelunternehmen|ADR-008 — Rechtsform Einzelunternehmen]]
 
 ## ⚠️ Abweichungen
 - [[70-Deviations/DEV-001_Logo-zurueckgestellt|DEV-001 — Logo-Entwurf zurückgestellt]]
