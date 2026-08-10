@@ -142,7 +142,7 @@ project: OpenMotion
 
 ### Geändert (0)
 
-- Keine Dateien seit dem letzten Scan geändert (mtime ≤ last_scan 2026-08-10T19:06:41+02:00, git status sauber, HEAD unverändert a3d8da5). Die zuletzt geänderten Dateien (CHANGELOG.md, KNOWN_ISSUES.md, scripts/BuildingVisualizer.cs, src/OpenMotion.Core/City/CityGrowthSystem.cs, src/OpenMotion.Core.Tests/CityGrowthTests.cs) sind im vorherigen Scan dokumentiert — Details siehe [[index]] (Letzte Änderungen) und [[dependencies]] (Impact-Map).
+- Keine Dateien seit dem letzten Scan geändert (mtime ≤ last_scan 2026-08-10T20:06:16+02:00, git status sauber, HEAD unverändert a3d8da5). Die zuletzt geänderten Dateien (CHANGELOG.md, KNOWN_ISSUES.md, scripts/BuildingVisualizer.cs, src/OpenMotion.Core/City/CityGrowthSystem.cs, src/OpenMotion.Core.Tests/CityGrowthTests.cs) sind im vorherigen Scan dokumentiert — Details siehe [[index]] (Letzte Änderungen) und [[dependencies]] (Impact-Map).
 
 ### Neu (0)
 
@@ -150,4 +150,4 @@ project: OpenMotion
 
 ### Entfernt (0)
 
-- Keine Dateien seit dem letzten Scan entfernt. (assets/logo/logo_clean.ico war bereits im vorherigen Scan als entfernt markiert und ist weiterhin nicht im Arbeitsbaum.) Stand Scan 2026-08-10T20:06:16+02:00.
+- Keine Dateien seit dem letzten Scan entfernt. (assets/logo/logo_clean.ico war bereits im vorherigen Scan als entfernt markiert und ist weiterhin nicht im Arbeitsbaum.) Stand Scan 2026-08-10T21:07:37+02:00.
