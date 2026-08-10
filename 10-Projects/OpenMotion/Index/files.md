@@ -1,7 +1,7 @@
 ---
 tags: [index, openmotion, files]
 created: 2026-08-09
-updated: 2026-08-09
+updated: 2026-08-10
 project: OpenMotion
 ---
 
@@ -142,7 +142,7 @@ project: OpenMotion
 
 ### Geändert (0)
 
-- Keine Dateien seit dem letzten Scan geändert (mtime ≤ last_scan 2026-08-09T16:08:20+02:00, git status sauber, HEAD unverändert a3d8da5). Die zuletzt geänderten Dateien (CHANGELOG.md, KNOWN_ISSUES.md, scripts/BuildingVisualizer.cs, src/OpenMotion.Core/City/CityGrowthSystem.cs, src/OpenMotion.Core.Tests/CityGrowthTests.cs) sind im vorherigen Scan dokumentiert — Details siehe [[index]] (Letzte Änderungen) und [[dependencies]] (Impact-Map).
+- Keine Dateien seit dem letzten Scan geändert (mtime ≤ last_scan 2026-08-09T17:17:14+02:00, git status sauber, HEAD unverändert a3d8da5). Die zuletzt geänderten Dateien (CHANGELOG.md, KNOWN_ISSUES.md, scripts/BuildingVisualizer.cs, src/OpenMotion.Core/City/CityGrowthSystem.cs, src/OpenMotion.Core.Tests/CityGrowthTests.cs) sind im vorherigen Scan dokumentiert — Details siehe [[index]] (Letzte Änderungen) und [[dependencies]] (Impact-Map).
 
 ### Neu (0)
 
