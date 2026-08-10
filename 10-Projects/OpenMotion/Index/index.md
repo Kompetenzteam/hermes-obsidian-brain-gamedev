@@ -2,7 +2,7 @@
 tags: [index, openmotion]
 created: 2026-08-09
 updated: 2026-08-10
-last_scan: 2026-08-10T12:16:32+02:00
+last_scan: 2026-08-10T13:05:18+02:00
 project: OpenMotion
 ---
 
@@ -16,19 +16,19 @@ Nahverkehrs-Simulator (Godot 4.7.1 .NET/C#, desync-freier Lockstep-Multiplayer, 
 
 ## Scan-Statistik
 
-- **Scan-Zeitpunkt:** 2026-08-10T12:16:32+02:00
-- **Scan-Typ:** Inkrementeller Scan (letzter Scan: 2026-08-10T11:10:39+02:00, Hybrid-Strategie)
+- **Scan-Zeitpunkt:** 2026-08-10T13:05:18+02:00
+- **Scan-Typ:** Inkrementeller Scan (letzter Scan: 2026-08-10T12:16:32+02:00, Hybrid-Strategie)
 - **Dateien gesamt (`files_total`):** 123 (find nach Exclusions; Bestand identisch zum letzten Scan)
 - **Neue Dateien (`files_new`):** 0
 - **Geänderte Dateien (`files_changed`):** 0 (keine mtime-Änderung > last_scan, git status sauber, HEAD unverändert a3d8da5 — kein Dateiinhalt seit dem letzten Scan geändert)
 - **Entfernte Dateien (`files_removed`):** 0 (assets/logo/logo_clean.ico bleibt aus früheren Scans als entfernt markiert und ist weiterhin nicht im Arbeitsbaum — keine NEUEN Entfernungen)
-- **Indexierte Funktionen/Klassen/Methoden (`functions_indexed`):** 501 (unverändert zum letzten Scan)
-- **Abhängigkeiten (`dependencies_indexed`):** 111 Tabellenzeilen (Methode: alle `| `-Zeilen inkl. Tabellen-Header + Kernmodule; unverändert zum letzten Scan)
+- **Indexierte Funktionen/Klassen/Methoden (`functions_indexed`):** 501 (verifiziert per Zählung: 501 Listeneinträge in functions.md; unverändert)
+- **Abhängigkeiten (`dependencies_indexed`):** 111 Tabellenzeilen (verifiziert per Zählung: 111 `|`-Zeilen inkl. Tabellen-Header + Kernmodule; unverändert)
 - **Scan-Dauer:** ca. 1 Minute (Dateiliste, Git-Status + mtime-Vergleich, Bestands-Abgleich files.md ↔ Arbeitsbaum, index.md aktualisiert)
 
 ## Letzte Änderungen
 
-*Letzter Scan: 2026-08-10 12:16. Keine neuen Commits/Änderungen seit dem letzten Scan — HEAD unverändert a3d8da5, Git-Arbeitsbaum sauber.*
+*Letzter Scan: 2026-08-10 13:05. Keine neuen Commits/Änderungen seit dem letzten Scan — HEAD unverändert a3d8da5, Git-Arbeitsbaum sauber.*
 
 | Zeitstempel (Git) | Datei |
 |-------------------|-------|
