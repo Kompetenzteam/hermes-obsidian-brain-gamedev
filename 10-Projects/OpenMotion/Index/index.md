@@ -2,7 +2,7 @@
 tags: [index, openmotion]
 created: 2026-08-09
 updated: 2026-08-10
-last_scan: 2026-08-10T09:10:46+02:00
+last_scan: 2026-08-10T10:08:03+02:00
 project: OpenMotion
 ---
 
@@ -16,8 +16,8 @@ Nahverkehrs-Simulator (Godot 4.7.1 .NET/C#, desync-freier Lockstep-Multiplayer, 
 
 ## Scan-Statistik
 
-- **Scan-Zeitpunkt:** 2026-08-10T09:10:46+02:00
-- **Scan-Typ:** Inkrementeller Scan (letzter Scan: 2026-08-10T08:34:20+02:00, Hybrid-Strategie)
+- **Scan-Zeitpunkt:** 2026-08-10T10:08:03+02:00
+- **Scan-Typ:** Inkrementeller Scan (letzter Scan: 2026-08-10T09:10:46+02:00, Hybrid-Strategie)
 - **Dateien gesamt (`files_total`):** 123 (find nach Exclusions; Bestand identisch zum letzten Scan)
 - **Neue Dateien (`files_new`):** 0
 - **Geänderte Dateien (`files_changed`):** 0 (keine mtime-Änderung > last_scan, git status sauber, HEAD unverändert a3d8da5 — kein Dateiinhalt seit dem letzten Scan geändert)
@@ -28,7 +28,7 @@ Nahverkehrs-Simulator (Godot 4.7.1 .NET/C#, desync-freier Lockstep-Multiplayer, 
 
 ## Letzte Änderungen
 
-*Letzter Scan: 2026-08-10 09:10. Keine neuen Commits/Änderungen seit dem letzten Scan — HEAD unverändert a3d8da5, Git-Arbeitsbaum sauber.*
+*Letzter Scan: 2026-08-10 10:08. Keine neuen Commits/Änderungen seit dem letzten Scan — HEAD unverändert a3d8da5, Git-Arbeitsbaum sauber.*
 
 | Zeitstempel (Git) | Datei |
 |-------------------|-------|
